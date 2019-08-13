@@ -4,13 +4,13 @@ package com.driving.application.jt808;
  * JT808 协议帧基类
  * 协议采用大端模式(big-endian)
  */
-public class BaseFrame {
+public class Frame {
     /**帧标识符*/
     private Byte FLAG = 0X7e;
 
     /**消息头*/
     /**消息ID 用WORD表示，2个字节无符号数*/
-    protected short MSG_HEADER_ID =0x0900;
+    protected int MSG_HEADER_ID =0x0900;
 
     /**消息体属性, WORD */
     protected short HEADER_MSG_ATTR =11;
@@ -36,6 +36,11 @@ public class BaseFrame {
      规则定义如下*/
     protected byte[] transformer() {
         return new byte[2];
+    }
+
+    public byte[] generateData() {
+        byte[] data = new byte[2];
+        return data;
     }
 
 }

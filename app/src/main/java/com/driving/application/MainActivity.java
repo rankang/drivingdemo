@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
+import com.driving.application.connect.ConnectManager;
+
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     @Override
@@ -26,6 +28,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.teacher_sign:
+
+
+                ConnectManager.getInstance().sendData(new byte[]{0x01, 0x02});
                 break;
             case R.id.student_sign:
                 break;
