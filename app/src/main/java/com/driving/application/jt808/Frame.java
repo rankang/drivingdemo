@@ -192,10 +192,10 @@ public class Frame {
         // checkSum 计算
         byte checkSum = header[0];
         for(int i=1; i<header.length; i++) {
-            checkSum = (byte) (checkSum ^ header[i]);
+            checkSum ^=  header[i];
         }
-        for(byte dataItem : body) {
-            checkSum = (byte) (checkSum ^ dataItem);
+        for(byte b : body) {
+            checkSum ^= b;
         }
         frameData[index++] = checkSum;
 

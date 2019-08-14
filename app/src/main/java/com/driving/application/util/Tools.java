@@ -114,7 +114,7 @@ public class Tools {
         }
         while (idx<size) {
             key = IA1 * (key % mkey) +IC1;
-            buffer[idx++]^= (char)((key >> 20) &0xff);
+            buffer[idx++]^= (key >> 20) &0xff;
         }
         return buffer;
     }
