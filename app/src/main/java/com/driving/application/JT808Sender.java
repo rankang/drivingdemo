@@ -13,8 +13,6 @@ import static java.lang.Thread.sleep;
  */
 public class JT808Sender {
 
-
-
     private volatile static JT808Sender mInstance;
     private OutputStream outputStream;
     private boolean isSending = false;

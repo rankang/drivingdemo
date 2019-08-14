@@ -39,12 +39,15 @@ public class Tools {
     }
 
 
-    /**获取BCD码*/
+    /**获取BCD码
+     * @return 19 08 14 16 11 05 -> 20190814161105
+     * */
     public static byte[] getBCDByteArray(String date) {
+        // 年取2位 size - 1
         int size = date.length()/2;
-        byte[] dateArray = new byte[size];
+        byte[] dateArray = new byte[size-1];
         int index = 0;
-        for(int i=0; i<date.length(); i+=2) {
+        for(int i=2; i<date.length(); i+=2) {
             String each = date.substring(i, i+2);
             dateArray[index++] = (byte) Integer.parseInt(each);
         }
@@ -70,6 +73,14 @@ public class Tools {
         return b;
     }
 
+    public static byte[] intTo4Bytes(int n) {
+        byte[] b = new byte[4];
+        for (int i = 0; i < 4; i++) {
+            b[i] = (byte) (n >> (24 - i * 8));
+        }
+        return b;
+    }
+
     /**高位在前， 4个字节转int*/
     public static int byte2Int(byte[] b) {
         int intValue = 0;
@@ -82,6 +93,30 @@ public class Tools {
     public static int byte2Int(byte b2, byte b3, byte b0, byte b1) {
         byte[] b = {b2, b3, b0, b1};
         return byte2Int(b);
+    }
+
+    /**
+     * 	1、A: 为终端注册成功获取的鉴权码
+     * 	2、B: 设备商key1码，运管分配(书信密函)
+     * 	3、C: 设备商key2码，运管分配(书信密函)
+     */
+    private final int M1 = A;
+    private final int IA1 = B;
+    private final int IC1 = C;
+    public byte[] encry(int key, byte[] buffer, int size) {
+        int idx = 0;
+        if(0 == key) {
+            key = 1;
+        }
+        int mkey = M1;
+        if(0 == mkey) {
+            mkey = 1;
+        }
+        while (idx<size) {
+            key = IA1 * (key % mkey) +IC1;
+            buffer[idx++]^= (char)((key >> 20) &0xff);
+        }
+        return buffer;
     }
 
 }

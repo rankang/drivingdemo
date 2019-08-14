@@ -38,6 +38,7 @@ public class ConnectManager {
         new Thread(new SenderThread(data)).start();
     }
 
+
     public boolean connectJTServer(String ip, int port) {
         try {
             Socket clientSocket = new Socket(ip, port);
@@ -50,8 +51,6 @@ public class ConnectManager {
         }
         return true;
     }
-
-
 
     public void init() {
 
@@ -76,16 +75,20 @@ public class ConnectManager {
                 // 数据是否需要分包
                 dos.write(data);
                 dos.flush();
+                socket.shutdownOutput();
+
                 byte[] buffer = new byte[1024];
                 InputStream inputStream = socket.getInputStream();
                 DataInputStream dis = new DataInputStream(inputStream);
                 int len = -1;
                 while ((len = dis.read(buffer)) != -1) {
-                    dis.read(buffer);
+                    //dis.read(buffer, 0, len);
                     Logger.i(Tools.bytesToHexString(buffer));
                     // 需要计算校验
                 }
-
+                dos.close();
+                outputStream.close();
+                dis.close();
                 inputStream.close();
                 //dis.close();
                 //socket.shutdownInput();
