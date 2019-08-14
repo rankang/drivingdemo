@@ -9,11 +9,11 @@ import java.util.Date;
 import java.util.Locale;
 
 /**
- * JT808 协议帧基类
+ * JT808 协议帧封装类
  * 协议采用大端模式(big-endian)
  * 标识位-消息头-消息体-校验码-标识位
  */
-public class Frame {
+public class JT808Frame {
     /**帧标识符*/
     private static final byte FLAG = 0x7E;
     private static final int PACKAGE_SIZE = 1024;
@@ -168,9 +168,10 @@ public class Frame {
      * 帧数据构建
      * @param header 消息头部
      * @param body 消息体数据
-     * @return
+     * @param key 用于加密的key
+     * @return 字节数组
      */
-    public byte[] getFrameData(byte[] header, byte[] body) {
+    public byte[] getFrameData(int key, byte[] header, byte[] body) {
         // header 12,+数据长度+2x标识符+dataLength 2个字节+ checkSum 1个字节
         byte[] frameData = new byte[12+body.length+2+2+1];
         int index= 0;
@@ -184,11 +185,11 @@ public class Frame {
         for(int i=0; i<dataSize.length; i++) {
             frameData[index++] = dataSize[i];
         }
-        // data 赋值
-        for(int i=0; i<body.length; i++) {
-            frameData[index++] = body[i];
+        // 消息体
+        byte[] encryptBody = Tools.encrypt(0, body, body.length);
+        for(int i=0; i<encryptBody.length; i++) {
+            frameData[index++] = encryptBody[i];
         }
-
         // checkSum 计算
         byte checkSum = header[0];
         for(int i=1; i<header.length; i++) {
@@ -202,23 +203,46 @@ public class Frame {
         // 结束标识符
         frameData[index] = FLAG;
         Logger.i("frameData="+Tools.bytesToHexString(frameData));
-        return frameData;
+        return transformer(frameData);
     }
 
 
     /**
+     * 根据Jt808协议转换
      * transformer
-     * 采用Ox7e表示，若校验码、消息头以及消息体中出现0x7e，则要进行转义处理，转义
+     * 采用Ox7e表示，若校验码、消息头以及消息体中出现0x7e，则要进行转义处理，
+     * 转义规则
+     * 0x7e<——>0x7d后紧跟一个0x02；
+     * 0x7d<——>0x7d后紧跟一个0x01。
      * 转义处理过程如下:
      *发送消息时:消息封装——>计算并填充校验码——>转义;
      *接收消息时:转义还原——>验证校验码——>解析消息。
      */
 
-
-
-//    private byte[] transformer(byte[] frameData) {
-//
-//    }
+    private byte[] transformer(byte[] frameData) {
+        int count = 0;
+        for(int i=1;i<frameData.length-1;i++) {
+            if(frameData[i] == 0x7e){
+                count++;
+            }
+        }
+        byte[] data = new byte[frameData.length+count];
+        int index = 0;
+        data[index++] = FLAG;
+        for(int i=1; i<frameData.length-1;i++) {
+            if(frameData[i] == 0x7e) {
+                data[index++] = 0x7d;
+                data[index++] = 0x02;
+            } else if(frameData[index++] == 0x7d) {
+                data[index++] = 0x7d;
+                data[index++] = 0x01;
+            } else {
+                data[index++] = frameData[i];
+            }
+        }
+        data[index] = FLAG;
+        return data;
+    }
 
 
 

@@ -6,8 +6,8 @@ import android.view.View;
 import android.widget.Button;
 
 import com.driving.application.connect.ConnectManager;
-import com.driving.application.jt808.Frame;
-import com.driving.application.util.Logger;
+import com.driving.application.jt808.JT808Frame;
+import com.driving.application.jt808.MSGID;
 import com.driving.application.util.Tools;
 
 import java.text.SimpleDateFormat;
@@ -37,27 +37,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.teacher_sign:
-                Frame f = new Frame();
-                byte[] bodyBaseData = new byte[51];
+                JT808Frame f = new JT808Frame();
+
+                byte[] bodyPrefix = new byte[51];
                 int index = 0;
-                /**
-                 * 0：实时数据
-                 * 1：补传数据
-                 */
-                bodyBaseData[index++] = 0x00;
+                //0：实时数据
+                //1：补传数据
+                // 由于只考虑在线情况所以此处赋值为0
+                bodyPrefix[index++] = 0x00;
                 // 教练登录编号6给字节 BCD码+流水号
                 String dateTime = new SimpleDateFormat("yyyyMMddHH", Locale.CHINESE).format(new Date());
                 byte[] bcdDateTime = Tools.getBCDByteArray(dateTime);
                 for(int i=0; i<bcdDateTime.length; i++) {
-                    bodyBaseData[index++] = bcdDateTime[i];
+                    bodyPrefix[index++] = bcdDateTime[i];
                 }
                 // 流水号1-65535
                 if(flowNum > 65535) {
                     flowNum = 1;
                 }
                 byte[] flowNumBytes = Tools.intTo2Bytes(flowNum);
-                bodyBaseData[index++] = flowNumBytes[0];
-                bodyBaseData[index++] = flowNumBytes[1];
+                bodyPrefix[index++] = flowNumBytes[0];
+                bodyPrefix[index++] = flowNumBytes[1];
                 flowNum++;
 
                 // 教练IC
@@ -67,27 +67,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     icBytes[i] = originIcData[i];
                 }
                 for(byte b : icBytes) {
-                    bodyBaseData[index++] = b;
+                    bodyPrefix[index++] = b;
                 }
 
                 // 教练编号
                 byte[] teachNumBytes = Tools.intTo4Bytes(teacherNum);
                 for (byte item : teachNumBytes) {
-                    bodyBaseData[index++] = item;
+                    bodyPrefix[index++] = item;
                 }
-                // reverse 18个字节
+                // 消息项reverse 18个字节
                 index += 18;
                 // 教练驾校编号
                 byte[] schoolBytes = Tools.intTo4Bytes(schoolNum);
                 for(byte b : schoolBytes) {
-                    bodyBaseData[index++] = b;
+                    bodyPrefix[index++] = b;
                 }
 
-                byte[] gpsPackage = f.createGpsPackage(1000, 1000, 10, 50, 49, 10, 1, 1);
-                byte[] body = f.createMsgBody(bodyBaseData, gpsPackage);
-                byte[] header = f.createMsgHeader(0x0101, flowNum, 10, new byte[]{0x00, 0x00, 0x00, 0x00});
-                byte[] data = f.getFrameData(header, body);
+                byte[] gpsPackage = f.createGpsPackage(1000, 1000,
+                        10, 50, 49, 10, 1, 1);
+                byte[] msg_body = f.createMsgBody(bodyPrefix, gpsPackage);
+                int key = 0;
+                byte[] keyBytes = Tools.intTo4Bytes(0);
+                byte[] header = f.createMsgHeader(MSGID.TEACHER_LOGIN, flowNum, 10, keyBytes);
+                byte[] data = f.getFrameData(key, header, msg_body);
 
+                // sender
                 ConnectManager.getInstance().sendData(data);
                 break;
             case R.id.student_sign:

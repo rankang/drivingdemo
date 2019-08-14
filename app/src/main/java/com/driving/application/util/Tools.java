@@ -99,11 +99,13 @@ public class Tools {
      * 	1、A: 为终端注册成功获取的鉴权码
      * 	2、B: 设备商key1码，运管分配(书信密函)
      * 	3、C: 设备商key2码，运管分配(书信密函)
+     *
+     * 	加密内容： 透传消息内容
      */
-    private final int M1 = A;
-    private final int IA1 = B;
-    private final int IC1 = C;
-    public byte[] encry(int key, byte[] buffer, int size) {
+    private static final int M1 = A;
+    private static final int IA1 = B;
+    private static final int IC1 = C;
+    public static byte[] encrypt(int key, byte[] buffer, int size) {
         int idx = 0;
         if(0 == key) {
             key = 1;
@@ -112,11 +114,16 @@ public class Tools {
         if(0 == mkey) {
             mkey = 1;
         }
-        while (idx<size) {
+        while (idx < size) {
             key = IA1 * (key % mkey) +IC1;
             buffer[idx++]^= (key >> 20) &0xff;
         }
         return buffer;
+    }
+
+
+    public void decrypt() {
+
     }
 
 }
