@@ -33,7 +33,7 @@ public class ConnectManager {
     }
 
 
-    
+
 
     /**使用tcp短链接异步发送请求*/
     public void sendData(byte[] data) {
@@ -78,6 +78,11 @@ public class ConnectManager {
                 dos.write(data);
                 dos.flush();
                 socket.shutdownOutput();
+                try {
+                    Thread.sleep(10*1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
 
                 byte[] buffer = new byte[1024];
                 InputStream inputStream = socket.getInputStream();
@@ -87,7 +92,6 @@ public class ConnectManager {
                     //dis.read(buffer, 0, len);
                     Logger.i(Tools.bytesToHexString(buffer));
                     // 需要计算校验
-
                 }
                 dos.close();
                 outputStream.close();

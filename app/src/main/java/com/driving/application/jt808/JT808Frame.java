@@ -186,7 +186,7 @@ public class JT808Frame {
             frameData[index++] = dataSize[i];
         }
         // 消息体
-        byte[] encryptBody = Tools.encrypt(0, body, body.length);
+        byte[] encryptBody = Tools.encrypt(key, body, body.length);
         for(int i=0; i<encryptBody.length; i++) {
             frameData[index++] = encryptBody[i];
         }
