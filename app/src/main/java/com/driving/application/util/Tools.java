@@ -102,9 +102,9 @@ public class Tools {
      *
      * 	加密内容： 透传消息内容
      */
-    private static final int M1 = A;
-    private static final int IA1 = B;
-    private static final int IC1 = C;
+    private static final int M1 = 0;
+    private static final int IA1 = 9100000;
+    private static final int IC1 = 9200000;
     public static byte[] encrypt(int key, byte[] buffer, int size) {
         int idx = 0;
         if(0 == key) {

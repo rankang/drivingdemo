@@ -173,10 +173,11 @@ public class JT808Frame {
      */
     public byte[] getFrameData(int key, byte[] header, byte[] body) {
         // header 12,+数据长度+2x标识符+dataLength 2个字节+ checkSum 1个字节
-        byte[] frameData = new byte[12+body.length+2+2+1];
+        //byte[] frameData = new byte[12+body.length+2+2+1];
+        byte[] frameData = new byte[12+body.length+2];
         int index= 0;
         // 开始标识符
-        frameData[index++] = FLAG;
+        //frameData[index++] = FLAG;
         // header
         for(int i=0; i<header.length; i++) {
             frameData[index++] = header[i];
@@ -198,12 +199,15 @@ public class JT808Frame {
         for(byte b : body) {
             checkSum ^= b;
         }
-        frameData[index++] = checkSum;
+        //frameData[index++] = checkSum;
 
         // 结束标识符
-        frameData[index] = FLAG;
+        //frameData[index] = FLAG;
         Logger.i("frameData="+Tools.bytesToHexString(frameData));
-        return transformer(frameData);
+        //byte[] transformerData = transformer(frameData);
+        //Logger.i(Tools.bytesToHexString(transformerData));
+        //return transformerData;
+        return frameData;
     }
 
 
@@ -221,25 +225,27 @@ public class JT808Frame {
 
     private byte[] transformer(byte[] frameData) {
         int count = 0;
-        for(int i=1;i<frameData.length-1;i++) {
-            if(frameData[i] == 0x7e){
+        for(int i=1; i < frameData.length-1; i++) {
+            if(frameData[i] == 0x7e || frameData[i] == 0x7d){
                 count++;
             }
         }
-        byte[] data = new byte[frameData.length+count];
+        Logger.i(Tools.bytesToHexString(frameData));
+        byte[] data = new byte[frameData.length + count];
         int index = 0;
         data[index++] = FLAG;
-        for(int i=1; i<frameData.length-1;i++) {
+        for(int i=1; i < (frameData.length-1); i++) {
             if(frameData[i] == 0x7e) {
                 data[index++] = 0x7d;
                 data[index++] = 0x02;
-            } else if(frameData[index++] == 0x7d) {
+            } else if(frameData[i] == 0x7d) {
                 data[index++] = 0x7d;
                 data[index++] = 0x01;
             } else {
                 data[index++] = frameData[i];
             }
         }
+
         data[index] = FLAG;
         return data;
     }

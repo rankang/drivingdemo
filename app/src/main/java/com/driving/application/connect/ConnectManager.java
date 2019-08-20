@@ -21,7 +21,9 @@ public class ConnectManager {
     private OutputStream outStream;
     private Socket clientSocket;
 
-    private ConnectManager() {}
+    private ConnectManager() {
+
+    }
 
     public static ConnectManager getInstance() {
         if(mInstance == null) {
@@ -36,8 +38,61 @@ public class ConnectManager {
 
 
     /**使用tcp短链接异步发送请求*/
-    public void sendData(byte[] data) {
-        new Thread(new SenderThread(data)).start();
+    public void sendData(final byte[] data) {
+        //new Thread(new SenderThread(data)).start();
+        final byte[] temp1 = {0x7e, 0x01, 0x00, 0x00, 0x21, 0x01, 0x47, (byte) 0x85, 0x23, 0x69, 0x00, 0x00, 0x46, 0x00, 0x0B, 0x04, 0x57, 0x53,
+                0x31, 0x30, 0x30, 0x30, 0x53, 0x31, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x32, 0x7c, (byte)0xa4,
+                0x42, 0x50, 0x39, 0x34, 0x4a, 0x35, (byte) 0xef, 0x7e};
+        final byte[] temp = {0x7e, 0x01, 0x02, 0x00, 0x06, 0x01, 0x47, (byte) 0x85, 0x23, 0x69, 0x00, 0x00, 0x45, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, (byte) 0xef, 0x7e};
+
+        new Thread(){
+            @Override
+            public void run() {
+                super.run();
+                try {
+                    if(clientSocket == null) {
+                        init();
+                    }
+                   // OutputStream outStream = clientSocket.getOutputStream();
+                   // DataOutputStream dos = new DataOutputStream(outStream);
+                    outStream.write(temp1);
+                    outStream.flush();
+                } catch (IOException ioe) {
+                    ioe.printStackTrace();
+                }
+            }
+        }.start();
+
+
+    }
+
+
+    public void read() {
+        if(clientSocket == null) {
+            init();
+        }
+        new Thread(new ReadThread()).start();
+    }
+
+
+
+    public class ReadThread implements Runnable {
+        @Override
+        public void run() {
+            try {
+               //InputStream inStream = clientSocket.getInputStream();
+                //DataInputStream dis = new DataInputStream(inStream);
+                byte[] buffer = new byte[1024];
+                int len = -1;
+                while ((len = inStream.read(buffer)) != -1 ) {
+                    Logger.i("----------------------------------");
+                    Logger.i(Tools.bytesToHexString(buffer));
+                }
+                Logger.i("+++++++++++++++++++++++++++++++");
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+            }
+        }
     }
 
 
@@ -55,8 +110,17 @@ public class ConnectManager {
     }
 
     public void init() {
-
+        try {
+            clientSocket= new Socket(TCP_YG_IP_YN_KM, TCP_YG_PORT_YN_KM);
+            inStream = clientSocket.getInputStream();
+            outStream = clientSocket.getOutputStream();
+            read();
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
     }
+
+
 
 
 
@@ -69,7 +133,6 @@ public class ConnectManager {
 
         @Override
         public void run() {
-
             try {
                 Socket socket = new Socket(TCP_YG_IP_YN_KM, TCP_YG_PORT_YN_KM);
                 OutputStream outputStream = socket.getOutputStream();
@@ -93,12 +156,11 @@ public class ConnectManager {
                     Logger.i(Tools.bytesToHexString(buffer));
                     // 需要计算校验
                 }
+
                 dos.close();
                 outputStream.close();
                 dis.close();
                 inputStream.close();
-                //dis.close();
-                //socket.shutdownInput();
                 socket.close();
             } catch (IOException ioe) {
                 Logger.i("--catch an IOException--");
