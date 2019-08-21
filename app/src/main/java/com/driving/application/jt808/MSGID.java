@@ -1,6 +1,8 @@
 package com.driving.application.jt808;
 
 public interface MSGID {
+    /**注册*/
+    int REGISTER = 0X0100;
     /**教练登录*/
     int TEACHER_LOGIN = 0x0101;
     /**教练登出*/

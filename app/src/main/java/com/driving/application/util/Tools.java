@@ -54,6 +54,26 @@ public class Tools {
         return bcdExchange(dateArray);
     }
 
+    /**
+     *  把电话号码转成BCD码
+     */
+    public static byte[] getPhoneNumberBCD(String phoneNumber) {
+        // 用6个字节保存
+        byte[] phoneNumberBcd = new byte[6];
+        int reverseCount = 12-phoneNumber.length();
+        StringBuilder reverse = new StringBuilder();
+        for(int i = 0; i < reverseCount; i++) {
+            reverse.append("0");
+        }
+        String fixPhoneNumber = reverse + phoneNumber;
+        int index = 0;
+        for(int i=0; i<fixPhoneNumber.length(); i+=2) {
+            String each = fixPhoneNumber.substring(i, i+2);
+            phoneNumberBcd[index++] = (byte) Integer.parseInt(each);
+        }
+        return bcdExchange(phoneNumberBcd);
+    }
+
     private static byte[] bcdExchange(byte[] data) {
         byte[] hexData = new byte[data.length];
         for(int i=0; i<data.length; i++) {
@@ -121,6 +141,18 @@ public class Tools {
         return buffer;
     }
 
+    public static byte checkSum(byte[] data) {
+        return checkSum(data, 0, data.length);
+    }
+
+    public static byte checkSum(byte[] data, int start, int length) {
+        // checkSum 计算
+        byte checkSum = data[start];
+        for(int i=(start+1); i< start+length; i++) {
+            checkSum ^=  data[i];
+        }
+        return checkSum;
+    }
 
     public void decrypt() {
 
