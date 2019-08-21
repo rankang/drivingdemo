@@ -9,11 +9,11 @@ import java.util.Date;
 import java.util.Locale;
 
 /**
- * JT808 协议帧封装类
+ * 基于JT/T808 扩展协议帧封装类
  * 协议采用大端模式(big-endian)
  * 标识位-消息头-消息体-校验码-标识位
  */
-public class JT808Frame {
+public class JT808ExtFrame {
     /**帧标识符*/
     private static final byte FLAG = 0x7E;
     private static final int PACKAGE_SIZE = 1024;
@@ -56,7 +56,7 @@ public class JT808Frame {
     public byte[] createMsgHeader(int msgID, int msgFlowNum, int vendorID, byte[] encryPtKey) {
         int index = 0;
         byte[] header = new byte[12];
-        // msgId
+        // 消息ID
         byte[] msgIdBytes = Tools.intTo2Bytes(msgID);
         header[index++] =msgIdBytes[0];
         header[index++] = msgIdBytes[1];
@@ -68,6 +68,7 @@ public class JT808Frame {
         byte[] vendorIdBytes = Tools.intTo2Bytes(vendorID);
         header[index++] = vendorIdBytes[0];
         header[index++] = vendorIdBytes[1];
+        // 消息项 2 byte 保留
         index += 2;
         for(byte item : encryPtKey) {
             header[index++] = item;
@@ -173,11 +174,11 @@ public class JT808Frame {
      */
     public byte[] getFrameData(int key, byte[] header, byte[] body) {
         // header 12,+数据长度+2x标识符+dataLength 2个字节+ checkSum 1个字节
-        //byte[] frameData = new byte[12+body.length+2+2+1];
-        byte[] frameData = new byte[12+body.length+2];
+        byte[] frameData = new byte[12+body.length+2+2+1];
+        //byte[] frameData = new byte[12+body.length+2];
         int index= 0;
         // 开始标识符
-        //frameData[index++] = FLAG;
+        frameData[index++] = FLAG;
         // header
         for(int i=0; i<header.length; i++) {
             frameData[index++] = header[i];
@@ -199,15 +200,12 @@ public class JT808Frame {
         for(byte b : body) {
             checkSum ^= b;
         }
-        //frameData[index++] = checkSum;
+        frameData[index++] = checkSum;
 
         // 结束标识符
-        //frameData[index] = FLAG;
+        frameData[index] = FLAG;
         Logger.i("frameData="+Tools.bytesToHexString(frameData));
-        //byte[] transformerData = transformer(frameData);
-        //Logger.i(Tools.bytesToHexString(transformerData));
-        //return transformerData;
-        return frameData;
+        return transformer(frameData);
     }
 
 
