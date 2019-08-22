@@ -9,10 +9,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.driving.application.Callback;
 import com.driving.application.R;
 import com.driving.application.connect.ConnectManager;
+import com.driving.application.jt808.BaseFrame;
 import com.driving.application.jt808.JT808ExtFrame;
 import com.driving.application.jt808.MSGID;
 import com.driving.application.util.Logger;
@@ -37,8 +39,8 @@ public class TeacherLoginFragment extends Fragment {
     private String mParam1;
     private String mParam2;
 
-
-
+    private TextView mLogMessage;
+    private Button mNextStep;
 
     public TeacherLoginFragment() {
         // Required empty public constructor
@@ -82,75 +84,22 @@ public class TeacherLoginFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         Button teacherLogin = view.findViewById(R.id.teacher_login);
         Logger.i(Tools.bytesToHexString("云A5300学".getBytes(Charset.forName("gbk"))));
-        String car = new String(new byte[]{(byte)0xd4, (byte)0xc6, (byte)0x41, 0x35, 0x33, 0x30, 0x30, (byte)0xd1, (byte)0xA7}, Charset.forName("gbk"));
+        //String car = new String(new byte[]{(byte)0xd4, (byte)0xc6, (byte)0x41, 0x35, 0x33, 0x30, 0x30, (byte)0xd1, (byte)0xA7}, Charset.forName("gbk"));
         //46 00 36 30 30 30 35 39 37 33 37
-        String car2 = new String(new byte[]{(byte)0xd4, (byte)0xc6, (byte)0x41, 0x35, 0x33, 0x30, 0x30, (byte)0xd1, (byte)0xA7}, Charset.forName("gbk"));
-        Logger.i(car);
+        //String car2 = new String(new byte[]{(byte)0xd4, (byte)0xc6, (byte)0x41, 0x35, 0x33, 0x30, 0x30, (byte)0xd1, (byte)0xA7}, Charset.forName("gbk"));
+        //Logger.i(car);
 
         teacherLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                JT808ExtFrame f = new JT808ExtFrame();
-
-                byte[] bodyPrefix = new byte[51];
-                int index = 0;
-                //0：实时数据
-                //1：补传数据
-                // 由于只考虑在线情况所以此处赋值为0
-                bodyPrefix[index++] = 0x00;
-                // 教练登录编号6给字节 BCD码+流水号
-                String dateTime = new SimpleDateFormat("yyyyMMddHH", Locale.CHINESE).format(new Date());
-                byte[] bcdDateTime = Tools.getBCDByteArray(dateTime);
-                for(int i=0; i<bcdDateTime.length; i++) {
-                    bodyPrefix[index++] = bcdDateTime[i];
-                }
-                // 流水号1-65535
-                if(Utils.flowNum > 65535) {
-                    Utils.flowNum = 1;
-                }
-                byte[] flowNumBytes = Tools.intTo2Bytes(Utils.flowNum);
-                bodyPrefix[index++] = flowNumBytes[0];
-                bodyPrefix[index++] = flowNumBytes[1];
-                Utils.flowNum += 1;
-
-                // 教练IC
-                byte[] originIcData = "AY010101".getBytes();
-                byte[] icBytes = new byte[18];
-                for(int i=0; i<originIcData.length; i++) {
-                    icBytes[i] = originIcData[i];
-                }
-                for(byte b : icBytes) {
-                    bodyPrefix[index++] = b;
-                }
-
-                // 教练编号
-                byte[] teachNumBytes = Tools.intTo4Bytes(Utils.teacherNum);
-                for (byte item : teachNumBytes) {
-                    bodyPrefix[index++] = item;
-                }
-                // 消息项reverse 18个字节
-                index += 18;
-                // 教练驾校编号
-                byte[] schoolBytes = Tools.intTo4Bytes(Utils.schoolNum);
-                for(byte b : schoolBytes) {
-                    bodyPrefix[index++] = b;
-                }
-
-                byte[] gpsPackage = f.createGpsPackage(1000, 1000,
-                        10, 50, 49, 10, 1, 1);
-                byte[] msg_body = f.createMsgBody(bodyPrefix, gpsPackage);
-                int key = 1;
-                byte[] keyBytes = Tools.intTo4Bytes(key);
-                byte[] header = f.createMsgHeader(MSGID.TEACHER_LOGIN, Utils.flowNum, 10, keyBytes);
-                byte[] data = f.getFrameData(key, header, msg_body);
-
+                byte[] data = createRequest();
                 // sender
                 ConnectManager.getInstance().sendData(data);
             }
         });
 
-        Button nextStep = view.findViewById(R.id.next_step);
-        nextStep.setOnClickListener(new View.OnClickListener(){
+        mNextStep = view.findViewById(R.id.next_step);
+        mNextStep.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
                 if(mCallback != null) {
@@ -158,8 +107,67 @@ public class TeacherLoginFragment extends Fragment {
                 }
             }
         });
+
+        mLogMessage = view.findViewById(R.id.log_message);
     }
 
+
+    private byte[] createRequest() {
+        JT808ExtFrame f = new JT808ExtFrame();
+        //// 模拟数据
+        // 教练：63071952   姚志明    身份证530127198509281710
+        //驾校编号：53010098
+        byte[] bodyPrefix = new byte[51];
+        int index = 0;
+        //0：实时数据
+        //1：补传数据
+        // 由于只考虑在线情况所以此处赋值为0
+        bodyPrefix[index++] = 0x00;
+        // 教练登录编号6给字节 BCD码+流水号
+        String dateTime = new SimpleDateFormat("yyyyMMddHH", Locale.CHINESE).format(new Date());
+        byte[] bcdDateTime = Tools.getBCDByteArray(dateTime);
+        for(int i=0; i<bcdDateTime.length; i++) {
+            bodyPrefix[index++] = bcdDateTime[i];
+        }
+
+        int flowNum = BaseFrame.getFlowNum();
+        byte[] flowNumBytes = Tools.intTo2Bytes(flowNum);
+        bodyPrefix[index++] = flowNumBytes[0];
+        bodyPrefix[index++] = flowNumBytes[1];
+
+
+        // 教练IC
+        byte[] originIcData = Utils.icCard.getBytes(Charset.forName("gbk"));
+        byte[] icBytes = new byte[18];
+        for(int i=0; i<originIcData.length; i++) {
+            icBytes[i] = originIcData[i];
+        }
+        for(byte b : icBytes) {
+            bodyPrefix[index++] = b;
+        }
+
+        // 教练编号
+        byte[] teachNumBytes = Tools.intTo4Bytes(Utils.teacherNum);
+        for (byte item : teachNumBytes) {
+            bodyPrefix[index++] = item;
+        }
+        // 消息项reverse 18个字节
+        index += 18;
+        // 教练驾校编号
+        byte[] schoolBytes = Tools.intTo4Bytes(Utils.schoolNum);
+        for(byte b : schoolBytes) {
+            bodyPrefix[index++] = b;
+        }
+
+        byte[] gpsPackage = f.createGpsPackage(1000, 1000,
+                10, 50, 49, 10, 1, 1);
+        byte[] msg_body = f.createMsgBody(bodyPrefix, gpsPackage);
+        int key = Utils.key;
+        byte[] keyBytes = Tools.intTo4Bytes(key);
+        byte[] header = f.createMsgHeader(MSGID.TEACHER_LOGIN, 10, flowNum, keyBytes);
+        byte[] data = f.getFrameData(key, header, msg_body);
+        return data;
+    }
 
     private Callback mCallback = null;
     public void setCallback(Callback callback) {

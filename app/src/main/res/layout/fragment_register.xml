@@ -10,9 +10,22 @@
         android:layout_height="100dp"
         android:layout_marginLeft="20dp"
         android:layout_marginRight="20dp"
-        android:layout_gravity="center"
+        android:layout_marginTop="100dp"
         android:gravity="center"
         android:text="注册鉴权"
         android:id="@+id/register"/>
-
+    <TextView
+        android:id="@+id/log_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="220dp"
+        android:layout_marginLeft="20dp"/>
+    <Button
+        android:id="@+id/next_step"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right|bottom"
+        android:layout_margin="40dp"
+        android:text="@string/next_step"
+        android:enabled="false"/>
 </FrameLayout>

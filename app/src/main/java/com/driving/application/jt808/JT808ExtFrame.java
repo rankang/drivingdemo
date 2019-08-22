@@ -13,7 +13,7 @@ import java.util.Locale;
  * 协议采用大端模式(big-endian)
  * 标识位-消息头-消息体-校验码-标识位
  */
-public class JT808ExtFrame {
+public class JT808ExtFrame extends BaseFrame{
     /**帧标识符*/
     private static final byte FLAG = 0x7E;
     private static final int PACKAGE_SIZE = 1024;
@@ -49,11 +49,10 @@ public class JT808ExtFrame {
     /**
      * @param msgID  消息编号
      * @param msgFlowNum 流水号
-     * @param vendorID 厂商ID
      * @param encryPtKey 加密key ps：encryptKey 长度只能是4个字节
      * @return 头部直接数组
      */
-    public byte[] createMsgHeader(int msgID, int msgFlowNum, int vendorID, byte[] encryPtKey) {
+    public byte[] createMsgHeader(int msgID, int msgFlowNum, int vendorId, byte[] encryPtKey) {
         int index = 0;
         byte[] header = new byte[12];
         // 消息ID
@@ -65,7 +64,7 @@ public class JT808ExtFrame {
         header[index++] = msgNumBytes[0];
         header[index++] = msgNumBytes[1];
         // 厂商ID号
-        byte[] vendorIdBytes = Tools.intTo2Bytes(vendorID);
+        byte[] vendorIdBytes = Tools.intTo2Bytes(vendorId);
         header[index++] = vendorIdBytes[0];
         header[index++] = vendorIdBytes[1];
         // 消息项 2 byte 保留
@@ -183,12 +182,16 @@ public class JT808ExtFrame {
         for(int i=0; i<header.length; i++) {
             frameData[index++] = header[i];
         }
+        Logger.i("--------------header="+Tools.bytesToHexString(header));
         byte[] dataSize = Tools.intTo2Bytes(body.length);
         for(int i=0; i<dataSize.length; i++) {
             frameData[index++] = dataSize[i];
         }
+        Logger.i("--------------dataSize="+Tools.bytesToHexString(dataSize));
         // 消息体
         byte[] encryptBody = Tools.encrypt(key, body, body.length);
+        Logger.i("---------------encryptBody="+Tools.bytesToHexString(encryptBody));
+
         for(int i=0; i<encryptBody.length; i++) {
             frameData[index++] = encryptBody[i];
         }
@@ -197,11 +200,14 @@ public class JT808ExtFrame {
         for(int i=1; i<header.length; i++) {
             checkSum ^=  header[i];
         }
-        for(byte b : body) {
+        for(byte b : dataSize) {
+            checkSum ^= b;
+        }
+        for(byte b : encryptBody) {
             checkSum ^= b;
         }
         frameData[index++] = checkSum;
-
+        Logger.i("------------------checkSum="+Tools.byteToHexString(checkSum));
         // 结束标识符
         frameData[index] = FLAG;
         Logger.i("frameData="+Tools.bytesToHexString(frameData));
@@ -221,32 +227,33 @@ public class JT808ExtFrame {
      *接收消息时:转义还原——>验证校验码——>解析消息。
      */
 
-    private byte[] transformer(byte[] frameData) {
-        int count = 0;
-        for(int i=1; i < frameData.length-1; i++) {
-            if(frameData[i] == 0x7e || frameData[i] == 0x7d){
-                count++;
-            }
-        }
-        Logger.i(Tools.bytesToHexString(frameData));
-        byte[] data = new byte[frameData.length + count];
-        int index = 0;
-        data[index++] = FLAG;
-        for(int i=1; i < (frameData.length-1); i++) {
-            if(frameData[i] == 0x7e) {
-                data[index++] = 0x7d;
-                data[index++] = 0x02;
-            } else if(frameData[i] == 0x7d) {
-                data[index++] = 0x7d;
-                data[index++] = 0x01;
-            } else {
-                data[index++] = frameData[i];
-            }
-        }
-
-        data[index] = FLAG;
-        return data;
-    }
+//    private byte[] transformer(byte[] frameData) {
+//        int count = 0;
+//        for(int i=1; i < frameData.length-1; i++) {
+//            if(frameData[i] == 0x7e || frameData[i] == 0x7d){
+//                count++;
+//            }
+//        }
+//        Logger.i(Tools.bytesToHexString(frameData));
+//        if(count <= 0) return frameData;
+//
+//        byte[] data = new byte[frameData.length + count];
+//        int index = 0;
+//        data[index++] = FLAG;
+//        for(int i=1; i < (frameData.length-1); i++) {
+//            if(frameData[i] == 0x7e) {
+//                data[index++] = 0x7d;
+//                data[index++] = 0x02;
+//            } else if(frameData[i] == 0x7d) {
+//                data[index++] = 0x7d;
+//                data[index++] = 0x01;
+//            } else {
+//                data[index++] = frameData[i];
+//            }
+//        }
+//        data[index] = FLAG;
+//        return data;
+//    }
 
 
 

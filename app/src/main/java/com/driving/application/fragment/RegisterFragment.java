@@ -9,11 +9,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 
+import com.driving.application.Callback;
 import com.driving.application.R;
 import com.driving.application.connect.ConnectManager;
+import com.driving.application.event.EvtBusEntity;
 import com.driving.application.jt808.JT808StFrame;
 import com.driving.application.jt808.MSGID;
+import com.driving.application.util.Logger;
+import com.driving.application.util.Utils;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -34,7 +39,8 @@ public class RegisterFragment extends Fragment {
     private String mParam1;
     private String mParam2;
 
-
+    private TextView mLogMessage;
+    private Button mNextStep;
     public RegisterFragment() {
         // Required empty public constructor
     }
@@ -81,24 +87,32 @@ public class RegisterFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         Button registerBtn = view.findViewById(R.id.register);
+        mLogMessage = view.findViewById(R.id.log_message);
         registerBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                byte[] requestData = createRequestData();
+                byte[] requestData = createRegisterRequestData();
                 ConnectManager.getInstance().sendData(requestData);
                 // 00
                 // 01 00 36 30 30 30 35 39 37 33 37
             }
         });
+
+        mNextStep = view.findViewById(R.id.next_step);
+        mNextStep.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                if(null != mCallback) {
+                    mCallback.onNext("TeacherLoginFragment");
+                }
+            }
+        });
     }
 
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onRegisted(byte[] data) {
-        // TODO  处理数据
-    }
 
-    private byte[] createRequestData() {
+
+    private byte[] createRegisterRequestData() {
         //  最好写成数据类来构建
         // 构建注册body 数据
         JT808StFrame stFrame = new JT808StFrame();
@@ -138,10 +152,74 @@ public class RegisterFragment extends Fragment {
             body[index++] = b;
         }
 
-        byte[] header = stFrame.createMsgHeader(MSGID.REGISTER, "18469127302", body.length);
+        byte[] header = stFrame.createMsgHeader(MSGID.REGISTER_REQ, "18469127302", body.length);
         byte[] msgData = stFrame.createMsgData(header, body);
         return msgData;
     }
 
+
+    private byte[] createValidateRequestData() {
+        JT808StFrame stFrame = new JT808StFrame();
+        byte [] body = Utils.validateCode.getBytes(Charset.forName("gbk"));
+        byte[] header = stFrame.createMsgHeader(MSGID.VALIDATE_REQ, "18469127302", body.length);
+        return stFrame.createMsgData(header, body);
+    }
+
+    int count = 0;
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onRegistered(EvtBusEntity entity) {
+        // 注册返回数据
+        if(MSGID.REGISTER_RES == entity.msgId) {
+            byte[] response = entity.data;
+            if(null != response) {
+                // 成功
+                byte responseCode = response[2];
+                if(responseCode == 0x00) {
+                    byte[] validateCodeBytes = new byte[response.length-3];
+                    for(int i=3; i<response.length; i++) {
+                        validateCodeBytes[i-3] = response[i];
+                    }
+                    String validateCode = new String(validateCodeBytes, Charset.forName("gbk"));
+                    Utils.validateCode = validateCode;
+                    Logger.i("===validateCode===="+validateCode);
+                    mLogMessage.setText("注册成功，鉴权码为："+validateCode);
+                    //mNextStep.setEnabled(true);
+                    if(count == 0) {
+                        count ++;
+                        ConnectManager.getInstance().sendData(createValidateRequestData());
+                    }
+                // 失败
+                } else {
+                    Logger.i("errorCode = "+responseCode);
+                    mLogMessage.setText("注册失败，错误码为："+responseCode);
+                }
+            }
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onValidated(EvtBusEntity entity) {
+        if(entity.msgId == MSGID.COMMON_RES) {
+            byte[] response = entity.data;
+            int responseCode = response[4];
+            StringBuffer sb = new StringBuffer(mLogMessage.getText().toString()).append("\n");
+            String log = "鉴权成功";
+            if(0x00 == responseCode) {
+                log = "鉴权成功";
+                sb.append(log);
+            } else {
+                log = "鉴权失败，错误码："+responseCode;
+            }
+            sb.append(log);
+            mLogMessage.setText(sb.toString());
+            mNextStep.setEnabled(true);
+        }
+    }
+
+    private Callback mCallback = null;
+    public void setCallback(Callback callback) {
+        this.mCallback = callback;
+    }
 
 }

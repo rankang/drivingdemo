@@ -26,6 +26,7 @@ public class MainActivity extends AppCompatActivity implements Callback {
 
     private void setUpFragment() {
         RegisterFragment tlf = RegisterFragment.newInstance("", "");
+        tlf.setCallback(this);
         FragmentTransaction t = getSupportFragmentManager().beginTransaction();
         t.replace(R.id.fragment_container, tlf);
         t.commit();
@@ -34,7 +35,11 @@ public class MainActivity extends AppCompatActivity implements Callback {
 
     @Override
     public void onNext(String jumpTo) {
-        if("StudentLoginFragment".equals(jumpTo)) {
+        if("TeacherLoginFragment".equals(jumpTo)) {
+            TeacherLoginFragment tlf = TeacherLoginFragment.newInstance("", "");
+            tlf.setCallback(this);
+            switchFragment(tlf);
+        } else if("StudentLoginFragment".equals(jumpTo)) {
             StudentLoginFragment slf = StudentLoginFragment.newInstance("", "");
             slf.setCallback(this);
             switchFragment(slf);

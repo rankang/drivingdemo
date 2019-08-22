@@ -110,6 +110,19 @@ public class Tools {
         return intValue;
     }
 
+    /**
+     * 两个字节转int
+     * @param b
+     * @return
+     */
+    public static int twoBytes2Int(byte[] b) {
+        int intValue = 0;
+        for (int i = 0; i < b.length; i++) {
+            intValue += (b[i] & 0xFF) << (8 * (1 - i));
+        }
+        return intValue;
+    }
+
     public static int byte2Int(byte b2, byte b3, byte b0, byte b1) {
         byte[] b = {b2, b3, b0, b1};
         return byte2Int(b);
@@ -122,10 +135,11 @@ public class Tools {
      *
      * 	加密内容： 透传消息内容
      */
-    private static final int M1 = 0;
+    private static int M1 = 0;
     private static final int IA1 = 9100000;
     private static final int IC1 = 9200000;
     public static byte[] encrypt(int key, byte[] buffer, int size) {
+        M1 = Integer.parseInt(Utils.validateCode);
         int idx = 0;
         if(0 == key) {
             key = 1;
