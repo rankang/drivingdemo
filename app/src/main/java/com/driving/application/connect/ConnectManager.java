@@ -282,7 +282,7 @@ public class ConnectManager {
             // Standard JTT808
             case MSGID.COMMON_RES:
             case MSGID.REGISTER_RES :
-                // 无其他属性，只标识数据长度
+                // 暂无其他属性，只标识数据长度
                 int msgBodyAttr = Tools.twoBytes2Int(new byte[]{data[3], data[4]});
                 // 根据数据长度取数据
                 int dataEndIndex = len-3;

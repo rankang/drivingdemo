@@ -72,7 +72,6 @@ public class JT808ExtFrame extends BaseFrame{
         for(byte item : encryPtKey) {
             header[index++] = item;
         }
-        Logger.i("--header="+Tools.bytesToHexString(header));
         return header;
     }
 
@@ -91,7 +90,6 @@ public class JT808ExtFrame extends BaseFrame{
         for(byte item : gpsPackage) {
             tempData[index++] = item;
         }
-        Logger.i("--body="+Tools.bytesToHexString(tempData));
         return tempData;
     }
 
@@ -188,12 +186,13 @@ public class JT808ExtFrame extends BaseFrame{
             frameData[index++] = dataSize[i];
         }
         Logger.i("--------------dataSize="+Tools.bytesToHexString(dataSize));
+
         // 消息体
         byte[] encryptBody = Tools.encrypt(key, body, body.length);
         Logger.i("---------------encryptBody="+Tools.bytesToHexString(encryptBody));
 
         for(int i=0; i<encryptBody.length; i++) {
-            frameData[index++] = encryptBody[i];
+            frameData[index++] = body[i];
         }
         // checkSum 计算
         byte checkSum = header[0];
@@ -207,10 +206,9 @@ public class JT808ExtFrame extends BaseFrame{
             checkSum ^= b;
         }
         frameData[index++] = checkSum;
-        Logger.i("------------------checkSum="+Tools.byteToHexString(checkSum));
         // 结束标识符
         frameData[index] = FLAG;
-        Logger.i("frameData="+Tools.bytesToHexString(frameData));
+        Logger.i("+++++++++frameData="+Tools.bytesToHexString(frameData));
         return transformer(frameData);
     }
 

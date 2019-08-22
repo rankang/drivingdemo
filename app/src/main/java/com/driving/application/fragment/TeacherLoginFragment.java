@@ -125,7 +125,8 @@ public class TeacherLoginFragment extends Fragment {
         bodyPrefix[index++] = 0x00;
         // 教练登录编号6给字节 BCD码+流水号
         String dateTime = new SimpleDateFormat("yyyyMMddHH", Locale.CHINESE).format(new Date());
-        byte[] bcdDateTime = Tools.getBCDByteArray(dateTime);
+        // 2019年08 月22 日22时
+        byte[] bcdDateTime = Tools.getBCDByteArray(dateTime);//new byte[]{0x19, 0x08, 0x22, 0x22};//Tools.getBCDByteArray(dateTime);
         for(int i=0; i<bcdDateTime.length; i++) {
             bodyPrefix[index++] = bcdDateTime[i];
         }
@@ -138,6 +139,7 @@ public class TeacherLoginFragment extends Fragment {
 
         // 教练IC
         byte[] originIcData = Utils.icCard.getBytes(Charset.forName("gbk"));
+        Logger.i("---------------originIcData----"+Tools.bytesToHexString(originIcData));
         byte[] icBytes = new byte[18];
         for(int i=0; i<originIcData.length; i++) {
             icBytes[i] = originIcData[i];
@@ -161,10 +163,12 @@ public class TeacherLoginFragment extends Fragment {
 
         byte[] gpsPackage = f.createGpsPackage(1000, 1000,
                 10, 50, 49, 10, 1, 1);
+        Logger.i("---------------teacher login bodyPrefix----------"+Tools.bytesToHexString(bodyPrefix));
         byte[] msg_body = f.createMsgBody(bodyPrefix, gpsPackage);
         int key = Utils.key;
         byte[] keyBytes = Tools.intTo4Bytes(key);
-        byte[] header = f.createMsgHeader(MSGID.TEACHER_LOGIN, 10, flowNum, keyBytes);
+        byte[] header = f.createMsgHeader(MSGID.TEACHER_LOGIN, flowNum, 1000, keyBytes);
+        Logger.i("---------------teacher login header----------"+Tools.bytesToHexString(header));
         byte[] data = f.getFrameData(key, header, msg_body);
         return data;
     }
