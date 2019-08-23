@@ -13,246 +13,147 @@ import java.util.Locale;
  * 协议采用大端模式(big-endian)
  * 标识位-消息头-消息体-校验码-标识位
  */
-public class JT808ExtFrame extends BaseFrame{
-    /**帧标识符*/
-    private static final byte FLAG = 0x7E;
-    private static final int PACKAGE_SIZE = 1024;
-//    /**
-//     *  数据长度	WORD = 2
-//     *  描述 数据的长度
-//     */
-//    private byte[] dataLength = new byte[2];
-//
-//    /**
-//     * 总共14个字节
-//     * 消息ID	WORD
-//     * 流水号	WORD
-//     * 厂商ID	WORD
-//     * 消息项	WORD
-//     * 加密key	 DWORD
-//     */
-//    private byte[] msgHeader = new byte[12];
-//    /***
-//     * 数据
-//     */
-//    private byte[] data;
-//
-//
-//
-//    /**若校验码、消息头以及消息体中出现0x7e，则要进行转义处理，转义
-//     规则定义如下*/
-//    protected byte[] transformer() {
-//        return new byte[2];
-//    }
+public abstract class JT808ExtFrame extends BaseFrame{
+
+    private int msgId;
+    private int key;
+    private int vendorId;
+    private String terminalPhoneNumber;
+    protected int frameFlowNum = getFlowNum();
+    public JT808ExtFrame(int msgId, int key, int vendorId, String terminalPhoneNumber) {
+        this.msgId = msgId;
+        this.key = key;
+        this.vendorId = vendorId;
+        this.terminalPhoneNumber = terminalPhoneNumber;
+    }
+
 
 
     /**
-     * @param msgID  消息编号
-     * @param msgFlowNum 流水号
-     * @param encryPtKey 加密key ps：encryptKey 长度只能是4个字节
-     * @return 头部直接数组
+     * 把  808头 透传消息类型 透传消息头 都属于消息头
+     * @return 头部字节数组 = 808头 + 透传消息类型+透传消息头
      */
-    public byte[] createMsgHeader(int msgID, int msgFlowNum, int vendorId, byte[] encryPtKey) {
+    @Override
+    protected byte[] createMsgHeader(int transBodySize) {
+        //
+        int bodySize = 1 + 14 + transBodySize;
+        byte[] jt808Header = createJTT808Header(bodySize);
+
         int index = 0;
-        byte[] header = new byte[12];
+        byte[] transHeader = new byte[14];
         // 消息ID
-        byte[] msgIdBytes = Tools.intTo2Bytes(msgID);
-        header[index++] =msgIdBytes[0];
-        header[index++] = msgIdBytes[1];
+        byte[] msgIdBytes = Tools.intTo2Bytes(msgId);
+        transHeader[index++] =msgIdBytes[0];
+        transHeader[index++] = msgIdBytes[1];
         // 流水号
-        byte[] msgNumBytes = Tools.intTo2Bytes(msgFlowNum);
-        header[index++] = msgNumBytes[0];
-        header[index++] = msgNumBytes[1];
+        byte[] msgNumBytes = Tools.intTo2Bytes(frameFlowNum);
+        transHeader[index++] = msgNumBytes[0];
+        transHeader[index++] = msgNumBytes[1];
         // 厂商ID号
         byte[] vendorIdBytes = Tools.intTo2Bytes(vendorId);
-        header[index++] = vendorIdBytes[0];
-        header[index++] = vendorIdBytes[1];
+        transHeader[index++] = vendorIdBytes[0];
+        transHeader[index++] = vendorIdBytes[1];
         // 消息项 2 byte 保留
         index += 2;
-        for(byte item : encryPtKey) {
-            header[index++] = item;
+        byte[] encryptKey = Tools.intTo4Bytes(key);
+        for(byte item : encryptKey) {
+            transHeader[index++] = item;
+        }
+
+        byte[] dataSizeBytes = Tools.intTo2Bytes(transBodySize);
+        for(byte b : dataSizeBytes) {
+            transHeader[index++] = b;
+        }
+        int jt808HeaderSize = jt808Header.length;
+        int transHeaderSize = transHeader.length;
+        // jt808HeaderSize + transHeaderSize + 透传消息类型 1byte
+        index = 0;
+        byte[] header = new byte[jt808HeaderSize+transHeaderSize+1];
+        for(byte b : jt808Header) {
+            header[index++] = b;
+        }
+        header[index++] = (byte) 0xF1;
+        for(byte b : transHeader) {
+            header[index++] = b;
         }
         return header;
     }
 
     /**
-     * @param data 数据
-     * @return 开始位置
+     *  创建808 头
+     * @param bodySize = 透传消息类型+透传消息头 + 透传消息内容
+     * @return
      */
-    public byte[] createMsgBody(byte[] data, byte[] gpsPackage) {
-        if(gpsPackage == null)  return data;
-        // gps 包一般是30个字节
-        byte[] tempData = new byte[data.length+gpsPackage.length];
+    private byte[] createJTT808Header(int bodySize) {
+        byte[] header = new byte[12];
         int index = 0;
-        for(byte item : data) {
-            tempData[index++] = item;
+        // 消息id 2 byte
+        byte[] msgIdBytes = Tools.intTo2Bytes(0x0900);
+        header[index++] = msgIdBytes[0];
+        header[index++] = msgIdBytes[1];
+
+        // 消息体属性 2 byte
+        byte[] bodySizeBytes = Tools.intTo2Bytes(bodySize);
+        header[index++] = bodySizeBytes[0];
+        header[index++] = bodySizeBytes[1];
+
+        // 电话号码BCD码 6 byte
+        byte[] phoneNumberBytes = Tools.getPhoneNumberBCD(terminalPhoneNumber);
+        for(byte b : phoneNumberBytes) {
+            header[index++] = b;
         }
-        for(byte item : gpsPackage) {
-            tempData[index++] = item;
-        }
-        return tempData;
+        // 流水号 2 byte
+        byte[] flowNumBytes = Tools.intTo2Bytes(frameFlowNum);
+        header[index++] = flowNumBytes[0];
+        header[index++] = flowNumBytes[1];
+        // 消息封装项 根据消息体属性而定
+        return header;
     }
 
-    /**
-     * 构建gps数据包
-     * @param lat 纬度
-     * @param lng 经度
-     * @param height  高度
-     * @param speed 速度
-     * @param recordDevSpeed 记录仪速度
-     * @param direction 记录仪速度
-     * @param status1 状态1
-     * @param status2 状态 JT808状态定义
-     * @return 字节数据
-     */
-    public byte[] createGpsPackage(int lat, int lng, int height, int speed,
-                            int recordDevSpeed, int direction, int status1, int status2) {
 
-        int index = 0;
-        // 初始化数据包 30 byte
-        byte[] gpsData = new byte[30];
-        // 时间BCD 码
-        String datetime = new SimpleDateFormat("yyyyMMddHHmmss", Locale.CHINESE).format(new Date());
-        Logger.i(datetime);
-        byte[] bcdDateTime = Tools.getBCDByteArray(datetime);
-        for(int i=0; i<bcdDateTime.length; i++) {
-            gpsData[index++] = bcdDateTime[i];
-        }
-        // 经度
-        byte[] lngBytes = Tools.intTo4Bytes(lng);
-        for(byte b : lngBytes) {
-            gpsData[index++] = b;
-        }
-        // 纬度
-        byte[] latBytes = Tools.intTo4Bytes(lat);
-        for(byte b : latBytes) {
-            gpsData[index++] = b;
-        }
+    @Override
+    public byte[] getMessage() {
+        byte[] transBody = createMsgBody();
+        Logger.i("------------transBody---------"+Tools.bytesToHexString(transBody));
+        int transBodySize = transBody.length;
+        byte[] header = createMsgHeader(transBodySize);
 
-        // 高度
-        byte[] heightBytes = Tools.intTo2Bytes(height);
-        gpsData[index++] = heightBytes[0];
-        gpsData[index++] = heightBytes[1];
+        // header size,+数据长度+2x标识符+ checkSum 1个字节
+        byte[] frameData = new byte[header.length+transBody.length+2+1];
 
-        // 速度
-        byte[] speedBytes = Tools.intTo2Bytes(speed);
-        gpsData[index++] = speedBytes[0];
-        gpsData[index++] = speedBytes[1];
-
-        // 记录设备速度
-        byte[] recordDevSpeedBytes = Tools.intTo2Bytes(recordDevSpeed);
-        gpsData[index++] = recordDevSpeedBytes[0];
-        gpsData[index++] = recordDevSpeedBytes[1];
-
-        // 方向 0-359度,正北0,顺时针
-        byte[] directionBytes = Tools.intTo2Bytes(direction);
-        gpsData[index++] = directionBytes[0];
-        gpsData[index++] = directionBytes[1];
-        // 状态1 JT808状态定义
-        byte[] status1Bytes = Tools.intTo4Bytes(status1);
-        for(byte b : status1Bytes) {
-            gpsData[index++] = b;
-        }
-        // 状态2
-        byte[] status2Bytes = Tools.intTo4Bytes(status2);
-        for(byte b : status2Bytes) {
-            gpsData[index++] = b;
-        }
-        Logger.i("gps="+Tools.bytesToHexString(gpsData));
-        return gpsData;
-    }
-
-    /**
-     * 帧数据构建
-     * @param header 消息头部
-     * @param body 消息体数据
-     * @param key 用于加密的key
-     * @return 字节数组
-     */
-    public byte[] getFrameData(int key, byte[] header, byte[] body) {
-        // header 12,+数据长度+2x标识符+dataLength 2个字节+ checkSum 1个字节
-        byte[] frameData = new byte[12+body.length+2+2+1];
-        //byte[] frameData = new byte[12+body.length+2];
         int index= 0;
         // 开始标识符
         frameData[index++] = FLAG;
+
         // header
-        for(int i=0; i<header.length; i++) {
-            frameData[index++] = header[i];
+        for (byte b : header) {
+            frameData[index++] = b;
         }
-        Logger.i("--------------header="+Tools.bytesToHexString(header));
-        byte[] dataSize = Tools.intTo2Bytes(body.length);
-        for(int i=0; i<dataSize.length; i++) {
-            frameData[index++] = dataSize[i];
-        }
-        Logger.i("--------------dataSize="+Tools.bytesToHexString(dataSize));
 
-        // 消息体
-        byte[] encryptBody = Tools.encrypt(key, body, body.length);
-        Logger.i("---------------encryptBody="+Tools.bytesToHexString(encryptBody));
-
-        for(int i=0; i<encryptBody.length; i++) {
-            frameData[index++] = body[i];
+        // 消息体 加密
+        Logger.i("+++++++++++++++++before+++++++++++++++++++++"+Tools.bytesToHexString(transBody));
+        byte[] encryptBody = Tools.encrypt(key, transBody, transBody.length);
+        Logger.i("++++++++++++++++++after+++++++++++++++++++++"+Tools.bytesToHexString(encryptBody));
+        for (byte b : encryptBody) {
+            frameData[index++] = b;
         }
+//        for(byte b : transBody) {
+//            frameData[index++] = b;
+//        }
         // checkSum 计算
         byte checkSum = header[0];
         for(int i=1; i<header.length; i++) {
             checkSum ^=  header[i];
         }
-        for(byte b : dataSize) {
-            checkSum ^= b;
-        }
         for(byte b : encryptBody) {
             checkSum ^= b;
         }
+
         frameData[index++] = checkSum;
+        Logger.i("------------------checkSum1-------------------------"+Tools.byteToHexString(checkSum));
         // 结束标识符
         frameData[index] = FLAG;
         Logger.i("+++++++++frameData="+Tools.bytesToHexString(frameData));
         return transformer(frameData);
     }
-
-
-    /**
-     * 根据Jt808协议转换
-     * transformer
-     * 采用Ox7e表示，若校验码、消息头以及消息体中出现0x7e，则要进行转义处理，
-     * 转义规则
-     * 0x7e<——>0x7d后紧跟一个0x02；
-     * 0x7d<——>0x7d后紧跟一个0x01。
-     * 转义处理过程如下:
-     *发送消息时:消息封装——>计算并填充校验码——>转义;
-     *接收消息时:转义还原——>验证校验码——>解析消息。
-     */
-
-//    private byte[] transformer(byte[] frameData) {
-//        int count = 0;
-//        for(int i=1; i < frameData.length-1; i++) {
-//            if(frameData[i] == 0x7e || frameData[i] == 0x7d){
-//                count++;
-//            }
-//        }
-//        Logger.i(Tools.bytesToHexString(frameData));
-//        if(count <= 0) return frameData;
-//
-//        byte[] data = new byte[frameData.length + count];
-//        int index = 0;
-//        data[index++] = FLAG;
-//        for(int i=1; i < (frameData.length-1); i++) {
-//            if(frameData[i] == 0x7e) {
-//                data[index++] = 0x7d;
-//                data[index++] = 0x02;
-//            } else if(frameData[i] == 0x7d) {
-//                data[index++] = 0x7d;
-//                data[index++] = 0x01;
-//            } else {
-//                data[index++] = frameData[i];
-//            }
-//        }
-//        data[index] = FLAG;
-//        return data;
-//    }
-
-
-
 }

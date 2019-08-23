@@ -62,48 +62,12 @@ public class ConnectManager {
 
     /**使用tcp短链接异步发送请求*/
     public void sendData(final byte[] data) {
-        //new Thread(new SenderThread(data)).start();
-        // 注册
-        // 530101 000000 取前两位和后4位-> 00 35 00 00
-        // (0X02) 车牌颜色
-        ///////////////////手机及车牌///////////////////
-        // 14736486727云D5285学
-        //18469127302 云A5300学
-        // 注册结果返回
-        //7e
-        // 81 00
-        // 00 0c
-        // 01 84 69 12 73 02
-        // 00 46
-        // 00
-        // 46 00  //
-        // 36 30 30 30 35 39 37 33 37 // 鉴权码
-        // 3b 7e
-//        final byte[] temp = {
-//                0x7e, // 标识
-//                0x01, 0x00, // 消息ID
-//                0x00, 0x22, // 消息体属性
-//                0x01, (byte)0x84, (byte) 0x69, 0x12, 0x73, 0x02, // 终端手机号BCD码 = 6
-//                0x00, 0x01, // 消息流水号 = 2
-//                0x00, 0x35,  // 省ID = 2
-//                0x00, 0x00,  // 市ID =2
-//                0x53, 0x31, 0x30, 0x30,  0x30, // 制造商ID =5
-//                0x53, 0x31, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30,  // 终端型号 = 8
-//                0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37,  // 终端ID = 7
-//                0x02, // 车牌颜色 = 1
-//                (byte)0xd4, (byte)0xc6, (byte)0x41, 0x35, 0x33, 0x30, 0x30, (byte)0xd1, (byte)0xA7, // 车牌号 = 9
-//                (byte)0xb9, // 异或校验
-//                0x7e
-//        };
-
-        // 鉴权
-        //final byte[] temp = {0x7e, 0x01, 0x02, 0x00, 0x06, 0x01, 0x47, (byte) 0x85, 0x23, 0x69, 0x00, 0x00, 0x45, 0x61, 0x61, 0x61, 0x61, 0x61, 0x61, (byte)0xC9, 0x7e};
-        // 计算校验码
+           // 计算校验码
         byte checkSum = data[1];
         for(int i=2; i < data.length-2; i++) {
             checkSum ^= data[i];
         }
-        Logger.i("--------------------------------------");
+        Logger.i("-----------------sendData---------------------");
         Logger.i(Tools.byteToHexString(checkSum));
         Logger.i(Tools.bytesToHexString(data));
         sendImpl(data);

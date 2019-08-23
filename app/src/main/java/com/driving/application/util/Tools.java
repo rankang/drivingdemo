@@ -1,5 +1,11 @@
 package com.driving.application.util;
 
+import android.util.Log;
+
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
+
 public class Tools {
 
     /**字节数组转成16进制字符串*/
@@ -135,11 +141,14 @@ public class Tools {
      *
      * 	加密内容： 透传消息内容
      */
-    private static int M1 = 0;
+    //private static int M1 = 0;
     private static final int IA1 = 9100000;
     private static final int IC1 = 9200000;
-    public static byte[] encrypt(int key, byte[] buffer, int size) {
-        M1 = Integer.parseInt(Utils.validateCode);
+    public static byte[] encrypt(int key, byte[] originalData, int size) {
+
+        char[] buffer = getChars(originalData);
+
+        int M1 = Integer.parseInt(Utils.validateCode);
         int idx = 0;
         if(0 == key) {
             key = 1;
@@ -152,8 +161,46 @@ public class Tools {
             key = IA1 * (key % mkey) +IC1;
             buffer[idx++]^= (key >> 20) &0xff;
         }
-        return buffer;
+        return getBytes(buffer);
     }
+
+    private static char[] getChars(byte[] bytes) {
+        Charset cs = Charset.forName("UTF-8");
+        ByteBuffer bb = ByteBuffer.allocate(bytes.length);
+        bb.put(bytes);
+        bb.flip();
+        CharBuffer cb = cs.decode(bb);
+        return cb.array();
+    }
+
+    private static byte[] getBytes(char[] chars) {
+        Charset cs = Charset.forName("UTF-8");
+        CharBuffer cb = CharBuffer.allocate(chars.length);
+        cb.put(chars);
+        cb.flip();
+        ByteBuffer bb = cs.encode(cb);
+        return bb.array();
+    }
+
+//    void encrypt(unsigned int key, unsigned char* buffer, unsigned int  size)
+//    {
+//        unsigned int idx = 0;
+//        if (0 == key)
+//        {
+//            key = 1;
+//        }
+//        unsigned int  mkey = M1;
+//        if(0 == mkey)
+//        {
+//            mkey = 1;
+//        }
+//        while (idx <size)
+//        {
+//            key = IA1 * (key % mkey) + IC1;
+//            buffer[idx++] ^= (unsigned char)((key >> 20) & 0xff);
+//        }
+//    }
+
 
     public static byte checkSum(byte[] data) {
         return checkSum(data, 0, data.length);

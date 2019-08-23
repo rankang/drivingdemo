@@ -17,6 +17,8 @@ import com.driving.application.connect.ConnectManager;
 import com.driving.application.event.EvtBusEntity;
 import com.driving.application.jt808.JT808StFrame;
 import com.driving.application.jt808.MSGID;
+import com.driving.application.jt808.frame.RegisterFrame;
+import com.driving.application.jt808.frame.ValidateFrame;
 import com.driving.application.util.Logger;
 import com.driving.application.util.Utils;
 
@@ -91,7 +93,9 @@ public class RegisterFragment extends Fragment {
         registerBtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                byte[] requestData = createRegisterRequestData();
+                //18469127302 云A5300学
+                JT808StFrame stFrame = new RegisterFrame(Utils.TERMINAL_PHONE_NUMBER, Utils.CAR_BOARD_NUMBER);
+                byte[] requestData = stFrame.getMessage();
                 ConnectManager.getInstance().sendData(requestData);
                 // 00
                 // 01 00 36 30 30 30 35 39 37 33 37
@@ -112,58 +116,51 @@ public class RegisterFragment extends Fragment {
 
 
 
-    private byte[] createRegisterRequestData() {
-        //  最好写成数据类来构建
-        // 构建注册body 数据
-        JT808StFrame stFrame = new JT808StFrame();
-        //  18469127302 云A5300学
-        String carNumber = "云A5300学";
-        byte[] carNumberBytes = carNumber.getBytes(Charset.forName("gbk"));
-        byte[] body = new byte[25+carNumberBytes.length];
-        int index = 0;
-        // 530101 000000 取前两位和后4位-> 00 35 00 00
-        // 省域ID
-        byte[] provinceBytes = {0x00, 0x35};
-        body[index++] = provinceBytes[0];
-        body[index++] = provinceBytes[1];
-        //  市县域ID
-        byte[] cityBytes = {0x00, 0x00};
-        body[index++] = cityBytes[0];
-        body[index++] = cityBytes[1];
-        // 制造商ID 自定义
-        byte[] vendorIdBytes = {0x53, 0x31, 0x30, 0x30,  0x30}; // 制造商ID =5
-        for(byte b : vendorIdBytes) {
-            body[index++] = b;
-        }
-        // 终端型号， 自定义 8个字节
-        byte[] terminalModelBytes = {0x53, 0x31, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30};
-        for(byte b : terminalModelBytes) {
-            body[index++] = b;
-        }
-        // 终端ID 自定义7个字节
-        byte[] terminalIdBytes = {0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37};
-        for(byte b : terminalIdBytes) {
-            body[index++] = b;
-        }
-        // 车牌颜色 默认
-        body[index++] = 0x02; // 车牌颜色
-        // 车牌 需要和手机号对应
-        for(byte b : carNumberBytes) {
-            body[index++] = b;
-        }
+//    private byte[] createRegisterRequestData() {
+//        //  最好写成数据类来构建
+//        // 构建注册body 数据
+//        JT808StFrame stFrame = new JT808StFrame();
+//        //  18469127302 云A5300学
+//        String carNumber = "云A5300学";
+//        byte[] carNumberBytes = carNumber.getBytes(Charset.forName("gbk"));
+//        byte[] body = new byte[25+carNumberBytes.length];
+//        int index = 0;
+//        // 530101 000000 取前两位和后4位-> 00 35 00 00
+//        // 省域ID
+//        byte[] provinceBytes = {0x00, 0x35};
+//        body[index++] = provinceBytes[0];
+//        body[index++] = provinceBytes[1];
+//        //  市县域ID
+//        byte[] cityBytes = {0x00, 0x00};
+//        body[index++] = cityBytes[0];
+//        body[index++] = cityBytes[1];
+//        // 制造商ID 自定义
+//        byte[] vendorIdBytes = {0x53, 0x31, 0x30, 0x30,  0x30}; // 制造商ID =5
+//        for(byte b : vendorIdBytes) {
+//            body[index++] = b;
+//        }
+//        // 终端型号， 自定义 8个字节
+//        byte[] terminalModelBytes = {0x53, 0x31, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30};
+//        for(byte b : terminalModelBytes) {
+//            body[index++] = b;
+//        }
+//        // 终端ID 自定义7个字节
+//        byte[] terminalIdBytes = {0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37};
+//        for(byte b : terminalIdBytes) {
+//            body[index++] = b;
+//        }
+//        // 车牌颜色 默认
+//        body[index++] = 0x02; // 车牌颜色
+//        // 车牌 需要和手机号对应
+//        for(byte b : carNumberBytes) {
+//            body[index++] = b;
+//        }
+//
+//        byte[] header = stFrame.createMsgHeader(MSGID.REGISTER_REQ, "18469127302", body.length);
+//        byte[] msgData = stFrame.createMsgData(header, body);
+//        return msgData;
+//    }
 
-        byte[] header = stFrame.createMsgHeader(MSGID.REGISTER_REQ, "18469127302", body.length);
-        byte[] msgData = stFrame.createMsgData(header, body);
-        return msgData;
-    }
-
-
-    private byte[] createValidateRequestData() {
-        JT808StFrame stFrame = new JT808StFrame();
-        byte [] body = Utils.validateCode.getBytes(Charset.forName("gbk"));
-        byte[] header = stFrame.createMsgHeader(MSGID.VALIDATE_REQ, "18469127302", body.length);
-        return stFrame.createMsgData(header, body);
-    }
 
     int count = 0;
 
@@ -187,7 +184,8 @@ public class RegisterFragment extends Fragment {
                     //mNextStep.setEnabled(true);
                     if(count == 0) {
                         count ++;
-                        ConnectManager.getInstance().sendData(createValidateRequestData());
+                        JT808StFrame vf = new ValidateFrame("18469127302", Utils.validateCode);
+                        ConnectManager.getInstance().sendData(vf.getMessage());
                     }
                 // 失败
                 } else {
@@ -204,10 +202,9 @@ public class RegisterFragment extends Fragment {
             byte[] response = entity.data;
             int responseCode = response[4];
             StringBuffer sb = new StringBuffer(mLogMessage.getText().toString()).append("\n");
-            String log = "鉴权成功";
+            String log = "";
             if(0x00 == responseCode) {
                 log = "鉴权成功";
-                sb.append(log);
             } else {
                 log = "鉴权失败，错误码："+responseCode;
             }
