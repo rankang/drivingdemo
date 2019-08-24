@@ -6,10 +6,10 @@ import com.driving.application.util.Utils;
 
 import java.nio.charset.Charset;
 
-public class ValidateFrame extends JT808StFrame {
+public class AuthFrame extends JT808StFrame {
 
     private String validateCode;
-    public ValidateFrame(String phoneNumber, String validateCode) {
+    public AuthFrame(String phoneNumber, String validateCode) {
         super(MSGID.VALIDATE_REQ, phoneNumber);
         this.validateCode = validateCode;
     }

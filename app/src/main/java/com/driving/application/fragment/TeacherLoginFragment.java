@@ -117,13 +117,13 @@ public class TeacherLoginFragment extends Fragment {
     private byte[] createTeacherLoginRequest() {
         Date date = new Date();
         String time = new SimpleDateFormat("yyyyMMddHHmmss", Locale.CHINESE).format(date);
-        GpsPackage gpsPackage = new GpsPackage(time,1000000, 1000000,
-                10, 50, 60, 35, 1, 1);
+        //24879660.0000,102833220.0000
+        GpsPackage gpsPackage = new GpsPackage(time,102833220, 24879660,
+                0, 0, 0, 0, 0, 32);
         String hourTime = new SimpleDateFormat("yyyyMMddHH", Locale.CHINESE).format(date);
         byte dataType = 0x00; // 实时数据
-        byte[] reverse = new byte[18];
-        String terminalPhoneNumber = Utils.TERMINAL_PHONE_NUMBER;
-
+        byte[] reverse = new byte[18]; // 保留18字节
+        String terminalPhoneNumber = Utils.TERMINAL_PHONE_NUMBER; // 终端手机号
         JT808ExtFrame tlf = new TeacherLoginFrame(Utils.KEY, Utils.VENDOR_ID, terminalPhoneNumber, dataType, hourTime, Utils.teacherIC,
                 Utils.teacherNum, reverse, Utils.schoolNum, gpsPackage);
         return tlf.getMessage();

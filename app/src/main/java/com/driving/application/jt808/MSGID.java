@@ -18,4 +18,8 @@ public interface MSGID {
     int STUDENT_LOGIN = 0x0201;
     /**学生登出*/
     int STUDENT_LOGOUT = 0x0202;
+
+
+    // 心跳
+    int HEART_BEAT = 0X0002;
 }

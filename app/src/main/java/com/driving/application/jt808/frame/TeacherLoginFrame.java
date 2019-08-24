@@ -5,6 +5,7 @@ import com.driving.application.jt808.GpsPackage;
 import com.driving.application.jt808.JT808ExtFrame;
 import com.driving.application.jt808.MSGID;
 import com.driving.application.util.Logger;
+import com.driving.application.util.PrefsUtil;
 import com.driving.application.util.Tools;
 import com.driving.application.util.Utils;
 
@@ -78,7 +79,9 @@ public class TeacherLoginFrame extends JT808ExtFrame {
         for(int i=0; i<bcdDateTime.length; i++) {
             transBody[index++] = bcdDateTime[i];
         }
-        byte[] flowNumBytes = Tools.intTo2Bytes(frameFlowNum);
+        int teacherLoginFlowNum = PrefsUtil.getTeachLoginFlowNum();
+        PrefsUtil.updateTeachLoginFlowNum();
+        byte[] flowNumBytes = Tools.intTo2Bytes(teacherLoginFlowNum); // 教练登录流水号1-65535
         transBody[index++] = flowNumBytes[0];
         transBody[index++] = flowNumBytes[1];
 

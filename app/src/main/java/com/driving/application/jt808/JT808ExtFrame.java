@@ -2,6 +2,7 @@ package com.driving.application.jt808;
 
 import com.driving.application.util.Logger;
 import com.driving.application.util.Tools;
+import com.driving.application.util.Utils;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -34,11 +35,12 @@ public abstract class JT808ExtFrame extends BaseFrame{
      * @return 头部字节数组 = 808头 + 透传消息类型+透传消息头
      */
     @Override
-    protected byte[] createMsgHeader(int transBodySize) {
-        //
-        int bodySize = 1 + 14 + transBodySize;
-        byte[] jt808Header = createJTT808Header(bodySize);
+    protected byte[] createMsgHeader(int bodySize) {
+        // 数据类型0xf1+ 透传消息头+透传消息内容
+        return createJTT808Header(bodySize);
+    }
 
+    private byte[] createTransHeader(int transBodySize) {
         int index = 0;
         byte[] transHeader = new byte[14];
         // 消息ID
@@ -64,19 +66,7 @@ public abstract class JT808ExtFrame extends BaseFrame{
         for(byte b : dataSizeBytes) {
             transHeader[index++] = b;
         }
-        int jt808HeaderSize = jt808Header.length;
-        int transHeaderSize = transHeader.length;
-        // jt808HeaderSize + transHeaderSize + 透传消息类型 1byte
-        index = 0;
-        byte[] header = new byte[jt808HeaderSize+transHeaderSize+1];
-        for(byte b : jt808Header) {
-            header[index++] = b;
-        }
-        header[index++] = (byte) 0xF1;
-        for(byte b : transHeader) {
-            header[index++] = b;
-        }
-        return header;
+        return transHeader;
     }
 
     /**
@@ -88,7 +78,7 @@ public abstract class JT808ExtFrame extends BaseFrame{
         byte[] header = new byte[12];
         int index = 0;
         // 消息id 2 byte
-        byte[] msgIdBytes = Tools.intTo2Bytes(0x0900);
+        byte[] msgIdBytes = Tools.intTo2Bytes(0x900);
         header[index++] = msgIdBytes[0];
         header[index++] = msgIdBytes[1];
 
@@ -114,46 +104,52 @@ public abstract class JT808ExtFrame extends BaseFrame{
     @Override
     public byte[] getMessage() {
         byte[] transBody = createMsgBody();
-        Logger.i("------------transBody---------"+Tools.bytesToHexString(transBody));
         int transBodySize = transBody.length;
-        byte[] header = createMsgHeader(transBodySize);
 
-        // header size,+数据长度+2x标识符+ checkSum 1个字节
-        byte[] frameData = new byte[header.length+transBody.length+2+1];
+        byte[] transHeader = createTransHeader(transBodySize);
+        // bodySize = 透传消息类型 0xf1 + 透传消息头长度 + 透传消息体长度
+        int bodySize = 1 + transHeader.length + transBodySize;
+        byte[] jtt808Header = createMsgHeader(bodySize);
+        // 帧长 = 808 头 + bodysize + 2*flag + 1 checksum
+        int frameSize = jtt808Header.length + bodySize + 2 + 1;
+
+        byte[] frameData = new byte[frameSize];
 
         int index= 0;
         // 开始标识符
         frameData[index++] = FLAG;
+        for (byte b : jtt808Header) {
+            frameData[index++] = b;
+        }
+        // 透传消息类型
+        frameData[index++] = (byte)0xF1;
 
-        // header
-        for (byte b : header) {
+        // 透传消息头
+        for (byte b : transHeader) {
             frameData[index++] = b;
         }
 
-        // 消息体 加密
-        Logger.i("+++++++++++++++++before+++++++++++++++++++++"+Tools.bytesToHexString(transBody));
+        // 透传消息体
         byte[] encryptBody = Tools.encrypt(key, transBody, transBody.length);
-        Logger.i("++++++++++++++++++after+++++++++++++++++++++"+Tools.bytesToHexString(encryptBody));
         for (byte b : encryptBody) {
             frameData[index++] = b;
         }
-//        for(byte b : transBody) {
-//            frameData[index++] = b;
-//        }
-        // checkSum 计算
-        byte checkSum = header[0];
-        for(int i=1; i<header.length; i++) {
-            checkSum ^=  header[i];
-        }
-        for(byte b : encryptBody) {
+
+        // 校验
+        byte checkSum = 0;
+        for (byte b :  jtt808Header) {
             checkSum ^= b;
         }
-
+        checkSum ^= 0xf1;
+        for (byte b : transHeader) {
+            checkSum ^= b;
+        }
+        for (byte b : transBody) {
+            checkSum ^= b;
+        }
         frameData[index++] = checkSum;
-        Logger.i("------------------checkSum1-------------------------"+Tools.byteToHexString(checkSum));
-        // 结束标识符
-        frameData[index] = FLAG;
-        Logger.i("+++++++++frameData="+Tools.bytesToHexString(frameData));
+        //  结束标识符
+        frameData[index++] = FLAG;
         return transformer(frameData);
     }
 }

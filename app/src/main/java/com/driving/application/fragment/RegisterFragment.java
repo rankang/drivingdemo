@@ -18,7 +18,7 @@ import com.driving.application.event.EvtBusEntity;
 import com.driving.application.jt808.JT808StFrame;
 import com.driving.application.jt808.MSGID;
 import com.driving.application.jt808.frame.RegisterFrame;
-import com.driving.application.jt808.frame.ValidateFrame;
+import com.driving.application.jt808.frame.AuthFrame;
 import com.driving.application.util.Logger;
 import com.driving.application.util.Utils;
 
@@ -43,6 +43,9 @@ public class RegisterFragment extends Fragment {
 
     private TextView mLogMessage;
     private Button mNextStep;
+
+    private boolean isValidate;
+
     public RegisterFragment() {
         // Required empty public constructor
     }
@@ -177,6 +180,7 @@ public class RegisterFragment extends Fragment {
                     for(int i=3; i<response.length; i++) {
                         validateCodeBytes[i-3] = response[i];
                     }
+
                     String validateCode = new String(validateCodeBytes, Charset.forName("gbk"));
                     Utils.validateCode = validateCode;
                     Logger.i("===validateCode===="+validateCode);
@@ -184,7 +188,7 @@ public class RegisterFragment extends Fragment {
                     //mNextStep.setEnabled(true);
                     if(count == 0) {
                         count ++;
-                        JT808StFrame vf = new ValidateFrame("18469127302", Utils.validateCode);
+                        JT808StFrame vf = new AuthFrame("18469127302", Utils.validateCode);
                         ConnectManager.getInstance().sendData(vf.getMessage());
                     }
                 // 失败
@@ -198,19 +202,23 @@ public class RegisterFragment extends Fragment {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onValidated(EvtBusEntity entity) {
-        if(entity.msgId == MSGID.COMMON_RES) {
+        if(entity.msgId == MSGID.COMMON_RES && !isValidate) {
             byte[] response = entity.data;
             int responseCode = response[4];
             StringBuffer sb = new StringBuffer(mLogMessage.getText().toString()).append("\n");
             String log = "";
             if(0x00 == responseCode) {
                 log = "鉴权成功";
+                mNextStep.setEnabled(true);
+                if(validateListener != null) {
+                    validateListener.onValidate();
+                }
+                isValidate = true;
             } else {
                 log = "鉴权失败，错误码："+responseCode;
             }
             sb.append(log);
             mLogMessage.setText(sb.toString());
-            mNextStep.setEnabled(true);
         }
     }
 
@@ -218,5 +226,12 @@ public class RegisterFragment extends Fragment {
     public void setCallback(Callback callback) {
         this.mCallback = callback;
     }
+    private ValidateListener validateListener;
+    public  interface ValidateListener {
+        void onValidate();
+    }
 
+    public void addValidateListener(ValidateListener validateListener) {
+        this.validateListener = validateListener;
+    }
 }

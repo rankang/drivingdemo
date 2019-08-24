@@ -138,16 +138,11 @@ public class Tools {
      * 	1、A: 为终端注册成功获取的鉴权码
      * 	2、B: 设备商key1码，运管分配(书信密函)
      * 	3、C: 设备商key2码，运管分配(书信密函)
-     *
      * 	加密内容： 透传消息内容
      */
-    //private static int M1 = 0;
     private static final int IA1 = 9100000;
     private static final int IC1 = 9200000;
-    public static byte[] encrypt(int key, byte[] originalData, int size) {
-
-        char[] buffer = getChars(originalData);
-
+    public static byte[] encrypt(int key, byte[] buffer, int size) {
         int M1 = Integer.parseInt(Utils.validateCode);
         int idx = 0;
         if(0 == key) {
@@ -159,27 +154,10 @@ public class Tools {
         }
         while (idx < size) {
             key = IA1 * (key % mkey) +IC1;
-            buffer[idx++]^= (key >> 20) &0xff;
+            buffer[idx] = (byte) (buffer[idx] ^  ((key >> 20) & 0xff));
+            idx++;
         }
-        return getBytes(buffer);
-    }
-
-    private static char[] getChars(byte[] bytes) {
-        Charset cs = Charset.forName("UTF-8");
-        ByteBuffer bb = ByteBuffer.allocate(bytes.length);
-        bb.put(bytes);
-        bb.flip();
-        CharBuffer cb = cs.decode(bb);
-        return cb.array();
-    }
-
-    private static byte[] getBytes(char[] chars) {
-        Charset cs = Charset.forName("UTF-8");
-        CharBuffer cb = CharBuffer.allocate(chars.length);
-        cb.put(chars);
-        cb.flip();
-        ByteBuffer bb = cs.encode(cb);
-        return bb.array();
+        return buffer;
     }
 
 //    void encrypt(unsigned int key, unsigned char* buffer, unsigned int  size)

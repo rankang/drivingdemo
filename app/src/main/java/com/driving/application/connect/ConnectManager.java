@@ -190,12 +190,13 @@ public class ConnectManager {
             int frameLength = originalData.length;
             pRd += frameLength;
             if(pRd < pWr) {
-                byte[] buf = new byte[1024];
+                byte[] buf = new byte[2048];
                 System.arraycopy(mRevBuffer, pRd, buf, 0, pWr - pRd);
                 mRevBuffer = buf;
                 pWr -= pRd;
                 pRd = 0;
             } else if(pWr == pRd) {
+                mRevBuffer = new byte[2048];
                 pWr = 0;
                 pRd = 0;
             }
@@ -211,25 +212,30 @@ public class ConnectManager {
      */
     private byte[] transformerBack(byte[] transformBytes) {
         int count = 0;
+        byte[] temp = new byte[transformBytes.length-2];
         for(int i=1; i<transformBytes.length-1; i++) {
             if(transformBytes[i] == 0x7d && (transformBytes[i+1] == 0x01 || transformBytes[i+1] == 0x02)) {
                 count++;
             }
+            temp[i-1] = transformBytes[i];
         }
         if(count <= 0) return transformBytes;
+
         byte[] originBytes = new byte[transformBytes.length - count];
         originBytes[0] = transformBytes[0];
-        for(int i=1; i<transformBytes.length-1; i++) {
-            if(transformBytes[i] == 0x7d && transformBytes[i+1] == 0x01) {
+        originBytes[0] = 0x7e;
+        for(int i=0; i<temp.length; i++) {
+            if(temp[i] == 0x7d && (i+1) < temp.length &&  temp[i+1] == 0x01) {
                 originBytes[i] = 0x7d;
-            } else if(transformBytes[i] == 0x7d && transformBytes[i+1] == 0x02) {
+                i++;
+            } else if(temp[i] == 0x7d && (i+1) < temp.length  && temp[i+1] == 0x02) {
                 originBytes[i] = 0x7e;
+                i++;
             } else {
-                originBytes[i] = transformBytes[i];
+                originBytes[i] = temp[i];
             }
         }
-        // 最后一个
-        originBytes[originBytes.length -1] = transformBytes[transformBytes.length-1];
+        originBytes[originBytes.length-1] = 0x7e;
         return originBytes;
     }
 

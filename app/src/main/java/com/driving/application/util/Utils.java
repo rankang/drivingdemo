@@ -9,7 +9,7 @@ public class Utils {
     public static String teacherIC = "530127198509281710";
     // 鉴权码600059737
     public static String validateCode = "";
-    public static final int KEY = 1;
+    public static final int KEY = 1000;
     public static final int VENDOR_ID = 1000;
 
     public static final String TERMINAL_PHONE_NUMBER = "18469127302";
