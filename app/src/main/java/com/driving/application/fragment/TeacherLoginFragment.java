@@ -121,11 +121,16 @@ public class TeacherLoginFragment extends Fragment {
         GpsPackage gpsPackage = new GpsPackage(time,102833220, 24879660,
                 0, 0, 0, 0, 0, 32);
         String hourTime = new SimpleDateFormat("yyyyMMddHH", Locale.CHINESE).format(date);
-        byte dataType = 0x00; // 实时数据
-        byte[] reverse = new byte[18]; // 保留18字节
-        String terminalPhoneNumber = Utils.TERMINAL_PHONE_NUMBER; // 终端手机号
-        JT808ExtFrame tlf = new TeacherLoginFrame(Utils.KEY, Utils.VENDOR_ID, terminalPhoneNumber, dataType, hourTime, Utils.teacherIC,
-                Utils.teacherNum, reverse, Utils.schoolNum, gpsPackage);
+        // 实时数据
+        byte dataType = 0x00;
+
+        // 保留18字节
+        byte[] reverse = new byte[18];
+
+        // 终端手机号
+        String terminalPhoneNumber = Utils.TERMINAL_PHONE_NUMBER;
+        JT808ExtFrame tlf = new TeacherLoginFrame(Utils.KEY, Utils.VENDOR_ID, terminalPhoneNumber,
+                dataType, hourTime, Utils.teacherIC, Utils.teacherNum, reverse, Utils.schoolNum, gpsPackage);
         return tlf.getMessage();
     }
 

@@ -61,6 +61,7 @@ public abstract class JT808StFrame extends BaseFrame {
 
         // body长度 + header 长度 + 2 个flag + 校验
         int length = body.length + header.length + 2 + 1;
+
         // 初始化msgdata字节数组
         byte[] msgData = new byte[length];
         int index = 0;

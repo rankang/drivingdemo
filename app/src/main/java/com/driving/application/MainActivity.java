@@ -31,6 +31,11 @@ public class MainActivity extends AppCompatActivity implements Callback, Registe
         //600059737
         PrefsUtil.create(getApplicationContext());
         Logger.i(new String(new byte[]{0x36, 0x30, 0x30, 0x30, 0x35, 0x39, 0x37, 0x33, 0x37}));
+        byte[] buffer = new byte[]{0x36, 0x30, 0x30, 0x30, 0x35, 0x39, 0x37, 0x33, 0x37};
+        byte[] encrypt = Tools.encrypt(Utils.KEY,  buffer, buffer.length);
+        Logger.i(Tools.bytesToHexString(encrypt));
+        byte[] a = Tools.encrypt(Utils.KEY, encrypt, encrypt.length);
+        Logger.i(Tools.bytesToHexString(a));
     }
 
     private void setUpFragment() {

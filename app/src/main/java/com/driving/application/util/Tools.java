@@ -139,6 +139,7 @@ public class Tools {
      * 	2、B: 设备商key1码，运管分配(书信密函)
      * 	3、C: 设备商key2码，运管分配(书信密函)
      * 	加密内容： 透传消息内容
+     * 	加密解密方法
      */
     private static final int IA1 = 9100000;
     private static final int IC1 = 9200000;
@@ -160,26 +161,6 @@ public class Tools {
         return buffer;
     }
 
-//    void encrypt(unsigned int key, unsigned char* buffer, unsigned int  size)
-//    {
-//        unsigned int idx = 0;
-//        if (0 == key)
-//        {
-//            key = 1;
-//        }
-//        unsigned int  mkey = M1;
-//        if(0 == mkey)
-//        {
-//            mkey = 1;
-//        }
-//        while (idx <size)
-//        {
-//            key = IA1 * (key % mkey) + IC1;
-//            buffer[idx++] ^= (unsigned char)((key >> 20) & 0xff);
-//        }
-//    }
-
-
     public static byte checkSum(byte[] data) {
         return checkSum(data, 0, data.length);
     }
@@ -191,10 +172,6 @@ public class Tools {
             checkSum ^=  data[i];
         }
         return checkSum;
-    }
-
-    public void decrypt() {
-
     }
 
 }

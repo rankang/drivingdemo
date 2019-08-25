@@ -8,7 +8,7 @@ public class Utils {
     /**教练IC号*/
     public static String teacherIC = "530127198509281710";
     // 鉴权码600059737
-    public static String validateCode = "";
+    public static String validateCode = "600059737";
     public static final int KEY = 1000;
     public static final int VENDOR_ID = 1000;
 

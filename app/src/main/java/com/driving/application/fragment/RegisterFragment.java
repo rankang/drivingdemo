@@ -201,7 +201,8 @@ public class RegisterFragment extends Fragment {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onValidated(EvtBusEntity entity) {
+    public void onAuthentication(EvtBusEntity entity) {
+        // 鉴权处理
         if(entity.msgId == MSGID.COMMON_RES && !isValidate) {
             byte[] response = entity.data;
             int responseCode = response[4];
@@ -226,6 +227,7 @@ public class RegisterFragment extends Fragment {
     public void setCallback(Callback callback) {
         this.mCallback = callback;
     }
+
     private ValidateListener validateListener;
     public  interface ValidateListener {
         void onValidate();

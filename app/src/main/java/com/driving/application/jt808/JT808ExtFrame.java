@@ -107,8 +107,9 @@ public abstract class JT808ExtFrame extends BaseFrame{
         int transBodySize = transBody.length;
 
         byte[] transHeader = createTransHeader(transBodySize);
-        // bodySize = 透传消息类型 0xf1 + 透传消息头长度 + 透传消息体长度
-        int bodySize = 1 + transHeader.length + transBodySize;
+        // bodySize = 透传消息类型 0xf1 + 透传消息头长度 + 透传消息体长度 + totalSize + current Size
+        int transHeaderSize = transHeader.length;
+        int bodySize = 1 + transHeaderSize + transBodySize + 2 + 4;
         byte[] jtt808Header = createMsgHeader(bodySize);
         // 帧长 = 808 头 + bodysize + 2*flag + 1 checksum
         int frameSize = jtt808Header.length + bodySize + 2 + 1;
@@ -123,6 +124,15 @@ public abstract class JT808ExtFrame extends BaseFrame{
         }
         // 透传消息类型
         frameData[index++] = (byte)0xF1;
+        //  transHeaderSize + transBodySize
+        byte[] transDataTotalSize = Tools.intTo4Bytes(transBodySize + transHeaderSize);
+        byte[] transDataCurrentSize = Tools.intTo2Bytes(transBodySize + transHeaderSize);
+        for(byte b : transDataTotalSize) {
+            frameData[index++] = b;
+        }
+        for(byte b : transDataCurrentSize) {
+            frameData[index++] = b;
+        }
 
         // 透传消息头
         for (byte b : transHeader) {
@@ -148,6 +158,7 @@ public abstract class JT808ExtFrame extends BaseFrame{
             checkSum ^= b;
         }
         frameData[index++] = checkSum;
+
         //  结束标识符
         frameData[index++] = FLAG;
         return transformer(frameData);

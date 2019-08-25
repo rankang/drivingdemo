@@ -1,10 +1,13 @@
 package com.driving.application.fragment;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 
 import com.driving.application.Callback;
 import com.driving.application.R;
@@ -46,6 +49,28 @@ public class StudentLoginFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_student_login, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        Button stuLogin = view.findViewById(R.id.student_login);
+        stuLogin.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+
+        Button nextStep = view.findViewById(R.id.next_step);
+        nextStep.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                if(mCallback != null) {
+                    mCallback.onNext("PicUploadFragment");
+                }
+            }
+        });
     }
 
     private Callback mCallback = null;
