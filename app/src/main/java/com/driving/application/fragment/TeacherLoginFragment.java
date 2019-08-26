@@ -118,9 +118,11 @@ public class TeacherLoginFragment extends Fragment {
         Date date = new Date();
         String time = new SimpleDateFormat("yyyyMMddHHmmss", Locale.CHINESE).format(date);
         //24879660.0000,102833220.0000
-        GpsPackage gpsPackage = new GpsPackage(time,102833220, 24879660,
+        // 25010846是纬度  102687371是经度
+        GpsPackage gpsPackage = new GpsPackage(time,25010846, 102687371,
                 0, 0, 0, 0, 0, 32);
         String hourTime = new SimpleDateFormat("yyyyMMddHH", Locale.CHINESE).format(date);
+
         // 实时数据
         byte dataType = 0x00;
 
