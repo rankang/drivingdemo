@@ -10,7 +10,7 @@ public class Utils {
     // 鉴权码600059737
     public static String validateCode = "600059737";
     public static final int KEY = 1000;
-    public static final int VENDOR_ID = 1000;
+    public static final int VENDOR_ID = 5;
 
     public static final String TERMINAL_PHONE_NUMBER = "18469127302";
     public static final String CAR_BOARD_NUMBER = "云A5300学";

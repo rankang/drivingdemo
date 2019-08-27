@@ -1,9 +1,8 @@
 package com.driving.application.jt808;
 
-import com.driving.application.util.Logger;
 import com.driving.application.util.Tools;
+import com.driving.application.util.Logger;
 import com.driving.application.util.Utils;
-
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -15,7 +14,7 @@ import java.util.Locale;
  * 标识位-消息头-消息体-校验码-标识位
  */
 public abstract class JT808ExtFrame extends BaseFrame{
-
+    private static final byte TRANS_DATA_TYPE = (byte)0XF1;
     private int msgId;
     private int key;
     private int vendorId;
@@ -107,7 +106,7 @@ public abstract class JT808ExtFrame extends BaseFrame{
         int transBodySize = transBody.length;
 
         byte[] transHeader = createTransHeader(transBodySize);
-        // bodySize = 透传消息类型 0xf1 + 透传消息头长度 + 透传消息体长度 + totalSize + current Size
+        // bodySize = 透传消息类型 0xf1 + 透传消息头长度 + 透传消息体长度
         int transHeaderSize = transHeader.length;
         int bodySize = 1 + transHeaderSize + transBodySize;
         byte[] jtt808Header = createMsgHeader(bodySize);
@@ -123,18 +122,8 @@ public abstract class JT808ExtFrame extends BaseFrame{
             frameData[index++] = b;
         }
         // 透传消息类型
-        byte transMsgType = (byte) 0xF1;
+        byte transMsgType = TRANS_DATA_TYPE;
         frameData[index++] = transMsgType;
-        //  transHeaderSize + transBodySize
-//        byte[] transDataTotalSize = Tools.intTo4Bytes(transBodySize + transHeaderSize);
-//        byte[] transDataCurrentSize = Tools.intTo2Bytes(transBodySize + transHeaderSize);
-//        for(byte b : transDataTotalSize) {
-//            frameData[index++] = b;
-//        }
-//        for(byte b : transDataCurrentSize) {
-//            frameData[index++] = b;
-//        }
-
         // 透传消息头
         for (byte b : transHeader) {
             frameData[index++] = b;
