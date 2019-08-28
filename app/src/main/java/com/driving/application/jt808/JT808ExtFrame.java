@@ -153,4 +153,60 @@ public abstract class JT808ExtFrame extends BaseFrame{
         frameData[index++] = FLAG;
         return transformer(frameData);
     }
+
+    protected byte[] createGpsData(GpsPackage gp) {
+        if(gp == null) return null;
+        int index = 0;
+        // 初始化数据包 30 byte
+        byte[] gpsData = new byte[30];
+        // 时间BCD 码
+        String datetime = new SimpleDateFormat("yyyyMMddHHmmss", Locale.CHINESE).format(new Date());
+        Logger.i("----------------------------"+datetime);
+        byte[] bcdDateTime = Tools.getBCDByteArray(gp.time);
+        for(int i=0; i<bcdDateTime.length; i++) {
+            gpsData[index++] = bcdDateTime[i];
+        }
+        // 经度
+        byte[] lngBytes = Tools.intTo4Bytes(gp.lng);
+        for(byte b : lngBytes) {
+            gpsData[index++] = b;
+        }
+        // 纬度
+        byte[] latBytes = Tools.intTo4Bytes(gp.lat);
+        for(byte b : latBytes) {
+            gpsData[index++] = b;
+        }
+
+        // 高度
+        byte[] heightBytes = Tools.intTo2Bytes(gp.height);
+        gpsData[index++] = heightBytes[0];
+        gpsData[index++] = heightBytes[1];
+
+        // 速度
+        byte[] speedBytes = Tools.intTo2Bytes(gp.speed);
+        gpsData[index++] = speedBytes[0];
+        gpsData[index++] = speedBytes[1];
+
+        // 记录设备速度
+        byte[] recordDevSpeedBytes = Tools.intTo2Bytes(gp.recordDevSpeed);
+        gpsData[index++] = recordDevSpeedBytes[0];
+        gpsData[index++] = recordDevSpeedBytes[1];
+
+        // 方向 0-359度,正北0,顺时针
+        byte[] directionBytes = Tools.intTo2Bytes(gp.direction);
+        gpsData[index++] = directionBytes[0];
+        gpsData[index++] = directionBytes[1];
+        // 状态1 JT808状态定义
+        byte[] status1Bytes = Tools.intTo4Bytes(gp.status1);
+        for(byte b : status1Bytes) {
+            gpsData[index++] = b;
+        }
+        // 状态2
+        byte[] status2Bytes = Tools.intTo4Bytes(gp.status2);
+        for(byte b : status2Bytes) {
+            gpsData[index++] = b;
+        }
+        Logger.i("gps="+Tools.bytesToHexString(gpsData));
+        return gpsData;
+    }
 }

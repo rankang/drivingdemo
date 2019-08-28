@@ -17,16 +17,24 @@ public class PrefsUtil {
         mInstance.editor = mInstance.sp.edit();
     }
 
-    public static void updateTeachLoginFlowNum() {
-        int num = getTeachLoginFlowNum()+1;
-        mInstance.editor.putInt("teach_login_flow", num).apply();
-    }
 
     public  static int getTeachLoginFlowNum() {
         int flow = mInstance.sp.getInt("teach_login_flow", 1);
         if(flow > 65535) {
             flow = 1;
         }
+        int num = flow+1;
+        mInstance.editor.putInt("teach_login_flow", num).apply();
+        return flow;
+    }
+
+
+    public  static int getStudentLoginFlowNum() {
+        int flow = mInstance.sp.getInt("stu_login_flow", 1);
+        if(flow > 65535) {
+            flow = 1;
+        }
+        mInstance.editor.putInt("stu_login_flow", flow+1).apply();
         return flow;
     }
 
