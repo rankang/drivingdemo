@@ -103,6 +103,7 @@ public abstract class JT808ExtFrame extends BaseFrame{
     @Override
     public byte[] getMessage() {
         byte[] transBody = createMsgBody();
+        Logger.i("-------transBody-------"+Tools.bytesToHexString(transBody));
         int transBodySize = transBody.length;
 
         byte[] transHeader = createTransHeader(transBodySize);
@@ -131,6 +132,7 @@ public abstract class JT808ExtFrame extends BaseFrame{
 
         // 透传消息体
         byte[] encryptBody = Tools.encrypt(key, transBody, transBody.length);
+        Logger.i("----encryptBody-------"+Tools.bytesToHexString(encryptBody));
         for (byte b : encryptBody) {
             frameData[index++] = b;
         }
@@ -144,7 +146,7 @@ public abstract class JT808ExtFrame extends BaseFrame{
         for (byte b : transHeader) {
             checkSum ^= b;
         }
-        for (byte b : transBody) {
+        for (byte b : encryptBody) {
             checkSum ^= b;
         }
         frameData[index++] = checkSum;

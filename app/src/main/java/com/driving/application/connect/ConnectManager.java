@@ -128,7 +128,7 @@ public class ConnectManager {
     private int pWr = 0; // 写的位置
     /**开辟2K的接收缓冲区*/
     private byte[] mRevBuffer = new byte[2048];
-
+    private boolean isAnalysis = false;
     /**
      * 解析JT808协议
      * @param data 每次收到数据
@@ -138,8 +138,10 @@ public class ConnectManager {
         int len = data.length;
         System.arraycopy(data, 0, mRevBuffer, pWr, len);
         pWr += len;
+        if(isAnalysis) return;
         // 当读的位置小于写的位置，并且pwr 的位置大于12（即通信帧的最小长度）
         while (pRd < pWr && pWr > 12) {
+            isAnalysis = true;
             // 找帧头
             int flag = 0;
             while (mRevBuffer[pRd] != 0x7e) {
@@ -182,6 +184,8 @@ public class ConnectManager {
             // 计算checkSum
             byte calculatedCheckSum = Tools.checkSum(originalData, 1, originalData.length-3);
             byte checkSum = originalData[originalData.length-2];
+            Logger.i("calculatedCheckSum===="+Tools.byteToHexString(calculatedCheckSum));
+            Logger.i("checkSum===="+Tools.byteToHexString(checkSum));
             // 校验通过处理数据
             if(calculatedCheckSum == checkSum) {
                 dataProcess(originalData);
@@ -201,6 +205,7 @@ public class ConnectManager {
                 pRd = 0;
             }
         }
+        isAnalysis = false;
     }
 
 

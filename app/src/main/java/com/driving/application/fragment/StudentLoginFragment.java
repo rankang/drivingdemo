@@ -11,6 +11,16 @@ import android.widget.Button;
 
 import com.driving.application.Callback;
 import com.driving.application.R;
+import com.driving.application.jt808.GpsPackage;
+import com.driving.application.jt808.JT808ExtFrame;
+import com.driving.application.jt808.frame.StudentLoginFrame;
+import com.driving.application.util.PrefsUtil;
+import com.driving.application.util.Tools;
+import com.driving.application.util.Utils;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class StudentLoginFragment extends Fragment {
 
@@ -71,6 +81,30 @@ public class StudentLoginFragment extends Fragment {
                 }
             }
         });
+    }
+
+
+    private byte[] createStuFrameData() {
+        // 25010846是纬度  102687371是经度
+        Date date = new Date();
+        String time = new SimpleDateFormat("yyyyMMddHHmmss", Locale.CHINESE).format(date);
+        GpsPackage gpsPackage = new GpsPackage(time,25010846, 102687371,
+                0, 0, 0, 0, 0, 32);
+
+        String hourTime = new SimpleDateFormat("yyyyMMddHH", Locale.CHINESE).format(date);
+
+        // 实时数据
+        byte dataType = 0x00;
+
+        // 保留18字节
+        byte[] reverse = new byte[18];
+        String terminalPhoneNumber = Utils.TERMINAL_PHONE_NUMBER;
+        // 学员登录编号 = 教练登录编号 + 学员登录流水号 共8字节
+        byte[] studentLoginNum = new byte[8];
+        byte[] stuFlowNumBytes = Tools.intTo2Bytes(PrefsUtil.getStudentLoginFlowNum());
+
+       // JT808ExtFrame jt808ExtFrame = new StudentLoginFrame(Utils.KEY, dataType, Utils.VENDOR_ID, terminalPhoneNumber, studentLoginNum)
+        return null;
     }
 
     private Callback mCallback = null;

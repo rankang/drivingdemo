@@ -30,12 +30,19 @@ public class MainActivity extends AppCompatActivity implements Callback, Registe
         setUpFragment();
         //600059737
         PrefsUtil.create(getApplicationContext());
-        Logger.i(new String(new byte[]{0x36, 0x30, 0x30, 0x30, 0x35, 0x39, 0x37, 0x33, 0x37}));
-        byte[] buffer = new byte[]{0x36, 0x30, 0x30, 0x30, 0x35, 0x39, 0x37, 0x33, 0x37};
-        byte[] encrypt = Tools.encrypt(Utils.KEY,  buffer, buffer.length);
-        Logger.i(Tools.bytesToHexString(encrypt));
-        byte[] a = Tools.encrypt(Utils.KEY, encrypt, encrypt.length);
-        Logger.i(Tools.bytesToHexString(a));
+//        byte[] buffer = new byte[]{0x26, 0x65, (byte)0xa1, (byte)0xce, 0x69, (byte)0xe7, (byte)0xa8, 0x6d, 0x38, 0x71, 0x24, 0x7c};
+//        byte[] encrypt = Tools.encrypt(27496,  buffer, buffer.length);
+//        byte[] buffer2 = new byte[]{0x01, 0x19, (byte)0xc4, (byte) 0xf8, 0x35, 0x0c, (byte) 0xe0, 0x4e, 0x1b, 0x3c, (byte)0xd6, 0x70};
+//        Logger.i(Tools.bytesToHexString(encrypt));
+//        byte[] encrypt2= Tools.encrypt(27496,  buffer2, buffer2.length);
+//        Logger.i(Tools.bytesToHexString(encrypt2));
+
+        byte[] buffer3 = new byte[]{0x01, 0x19, 0x08, (byte)0xa8, 0x17};
+        byte[] encrypt3 = Tools.encrypt(27496,  buffer3, buffer3.length);
+        Logger.i(Tools.bytesToHexString(encrypt3));
+        byte[] buffer4 = new byte[]{0x26, 0x65, 0x6d, (byte)0xe9, 0x4b};
+        byte[] encrypt4 = Tools.encrypt(27496,  buffer4, buffer4.length);
+        Logger.i(Tools.bytesToHexString(encrypt4));
     }
 
     private void setUpFragment() {
@@ -81,7 +88,6 @@ public class MainActivity extends AppCompatActivity implements Callback, Registe
     }
 
     private void switchFragment(Fragment fragment) {
-
         FragmentTransaction t = getSupportFragmentManager().beginTransaction();
         t.replace(R.id.fragment_container, fragment);
         t.commit();

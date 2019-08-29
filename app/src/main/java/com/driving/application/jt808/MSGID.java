@@ -22,4 +22,6 @@ public interface MSGID {
 
     // 心跳
     int HEART_BEAT = 0X0002;
+
+    int PIC_UPLOAD = 0x1801;
 }

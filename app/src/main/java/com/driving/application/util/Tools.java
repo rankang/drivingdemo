@@ -145,6 +145,7 @@ public class Tools {
     private static final int IC1 = 9200000;
     public static byte[] encrypt(int key, byte[] buffer, int size) {
         int M1 = Integer.parseInt(Utils.validateCode);
+        byte[] encrypt = new byte[size];
         int idx = 0;
         if(0 == key) {
             key = 1;
@@ -155,10 +156,10 @@ public class Tools {
         }
         while (idx < size) {
             key = IA1 * (key % mkey) +IC1;
-            buffer[idx] = (byte) (buffer[idx] ^  ((key >> 20) & 0xff));
+            encrypt[idx] = (byte) (buffer[idx] ^  ((key >> 20) & 0xff));
             idx++;
         }
-        return buffer;
+        return encrypt;
     }
 
     public static byte checkSum(byte[] data) {
