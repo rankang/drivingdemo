@@ -76,8 +76,8 @@ public abstract class JT808ExtFrame extends BaseFrame{
     private byte[] createJTT808Header(int bodySize) {
         byte[] header = new byte[12];
         int index = 0;
-        // 消息id 2 byte
-        byte[] msgIdBytes = Tools.intTo2Bytes(0x900);
+        // 消息ID 2 byte
+        byte[] msgIdBytes = Tools.intTo2Bytes(MSGID.TRANS_REQ);
         header[index++] = msgIdBytes[0];
         header[index++] = msgIdBytes[1];
 
@@ -162,9 +162,8 @@ public abstract class JT808ExtFrame extends BaseFrame{
         // 初始化数据包 30 byte
         byte[] gpsData = new byte[30];
         // 时间BCD 码
-        String datetime = new SimpleDateFormat("yyyyMMddHHmmss", Locale.CHINESE).format(new Date());
-        Logger.i("----------------------------"+datetime);
         byte[] bcdDateTime = Tools.getBCDByteArray(gp.time);
+        Logger.i("bcd"+Tools.bytesToHexString(bcdDateTime));
         for(int i=0; i<bcdDateTime.length; i++) {
             gpsData[index++] = bcdDateTime[i];
         }

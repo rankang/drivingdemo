@@ -116,12 +116,13 @@ public class TeacherLoginFragment extends Fragment {
 
     private byte[] createTeacherLoginRequest() {
         Date date = new Date();
-        String time = new SimpleDateFormat("yyyyMMddHHmmss", Locale.CHINESE).format(date);
+        String time = new SimpleDateFormat("yyMMddHHmmss", Locale.CHINESE).format(date);
         //24879660.0000,102833220.0000
         // 25010846是纬度  102687371是经度
         GpsPackage gpsPackage = new GpsPackage(time,25010846, 102687371,
                 0, 0, 0, 0, 0, 32);
-        String hourTime = new SimpleDateFormat("yyyyMMddHH", Locale.CHINESE).format(date);
+
+        String hourTime = new SimpleDateFormat("yyMMddHH", Locale.CHINESE).format(date);
 
         // 实时数据
         byte dataType = 0x00;
@@ -132,7 +133,7 @@ public class TeacherLoginFragment extends Fragment {
         // 终端手机号
         String terminalPhoneNumber = Utils.TERMINAL_PHONE_NUMBER;
         JT808ExtFrame tlf = new TeacherLoginFrame(Utils.KEY, Utils.VENDOR_ID, terminalPhoneNumber,
-                dataType, hourTime, Utils.teacherIC, Utils.teacherNum, reverse, Utils.schoolNum, gpsPackage);
+                dataType, hourTime, Utils.TEACHER_IC, Utils.TEACHER_NUM, reverse, Utils.SCHOOL_NUM, gpsPackage);
         return tlf.getMessage();
     }
 

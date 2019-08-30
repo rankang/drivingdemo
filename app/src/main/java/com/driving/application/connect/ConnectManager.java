@@ -190,9 +190,7 @@ public class ConnectManager {
             if(calculatedCheckSum == checkSum) {
                 dataProcess(originalData);
             }
-
-            int frameLength = originalData.length;
-            pRd += frameLength;
+            pRd += dataLength;
             if(pRd < pWr) {
                 byte[] buf = new byte[2048];
                 System.arraycopy(mRevBuffer, pRd, buf, 0, pWr - pRd);
@@ -246,27 +244,57 @@ public class ConnectManager {
 
 
     private void dataProcess(byte[] data) {
-        // 在次检测
-        if(data[0] != 0x7e || data[data.length-1] != 0x7e) {
+        // 在次检测  jtt808HeaderSize（12）
+        if(data[0] != 0x7e || data[data.length-1] != 0x7e || data.length < 12) {
             return;
         }
         int len = data.length;
         int msgId = Tools.twoBytes2Int(new byte[]{data[1], data[2]});
+        // 暂无其他属性，只标识数据长度
+        int msgBodyAttr = Tools.twoBytes2Int(new byte[]{data[3], data[4]});
+        int dataEndIndex = len-3;
+        int dataStartIndex = dataEndIndex-msgBodyAttr+1;
         byte[] msgData = null;
         switch (msgId) {
-            // Standard JTT808
+            // Standard JTT808 通用
             case MSGID.COMMON_RES:
-            case MSGID.REGISTER_RES :
-                // 暂无其他属性，只标识数据长度
-                int msgBodyAttr = Tools.twoBytes2Int(new byte[]{data[3], data[4]});
+            case MSGID.REGISTER_RES:
                 // 根据数据长度取数据
-                int dataEndIndex = len-3;
-                int dataStartIndex = dataEndIndex-msgBodyAttr+1;
                 msgData = new byte[msgBodyAttr];
-                for(int i=dataStartIndex; i<=dataEndIndex; i++) {
-                    msgData[i-dataStartIndex] = data[i];
-                }
+                if (dataEndIndex + 1 - dataStartIndex >= 0)
+                    System.arraycopy(data, dataStartIndex, msgData, 0, dataEndIndex + 1 - dataStartIndex);
                 Logger.i(Tools.bytesToHexString(msgData));
+                break;
+             // 下行透传
+            case MSGID.TRANS_RES:
+                // 30 = 2xflag + 0xf1 + checkSum（1） + jtt808HeaderSize（12） + transHeaderSize（14）
+                if(data.length <= 30) return;
+                msgData = new byte[msgBodyAttr-14];
+                // 透传消息的长度
+                // jtt808HeaderSize 14
+                // 消息长度 = len - 2*flag-checksum-jtt808headerSize
+                // len - 2-1-13-1
+                if(msgBodyAttr != len-2-1-14) return;
+                if(data[15] != (byte)0xF1) return;
+                int transMsgId = Tools.twoBytes2Int(new byte[]{data[16], data[17]});
+                int key = Tools.byte2Int(data[24], data[25], data[26], data[27]);
+                int transBodyLength = Tools.twoBytes2Int(new byte[]{data[28], data[29]});
+                int transBodyStartIndex = 30;
+                int transBodyEndIndex = dataEndIndex;
+                int transBodyCalculatedSize = transBodyEndIndex - transBodyStartIndex + 1;
+                if(transBodyCalculatedSize != transBodyLength) return;
+                byte[] transBodyData = new byte[transBodyLength];
+                switch (transMsgId) {
+                    case MSGID.TEACHER_LOGIN_RES_REAL:
+                    case MSGID.TEACHER_LOGIN_RES_HISTORY:
+                        if (transBodyEndIndex + 1 - transBodyStartIndex >= 0)
+                            System.arraycopy(data, transBodyStartIndex, transBodyData, 0, transBodyEndIndex + 1 - transBodyStartIndex);
+                        // 解密
+                        msgData = Tools.encrypt(key, transBodyData, transBodyLength);
+                        break;
+                    case MSGID.STUDENT_LOGIN_REQ:
+
+                }
                 break;
         }
         EventBus.getDefault().post(new EvtBusEntity(msgId, msgData));

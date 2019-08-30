@@ -51,9 +51,9 @@ public class Tools {
     public static byte[] getBCDByteArray(String date) {
         // 年取2位 size - 1
         int size = date.length()/2;
-        byte[] dateArray = new byte[size-1];
+        byte[] dateArray = new byte[size];
         int index = 0;
-        for(int i=2; i<date.length(); i+=2) {
+        for(int i=0; i<date.length(); i+=2) {
             String each = date.substring(i, i+2);
             dateArray[index++] = (byte) Integer.parseInt(each);
         }

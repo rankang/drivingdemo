@@ -87,24 +87,36 @@ public class StudentLoginFragment extends Fragment {
     private byte[] createStuFrameData() {
         // 25010846是纬度  102687371是经度
         Date date = new Date();
-        String time = new SimpleDateFormat("yyyyMMddHHmmss", Locale.CHINESE).format(date);
+        String time = new SimpleDateFormat("yyMMddHHmmss", Locale.CHINESE).format(date);
         GpsPackage gpsPackage = new GpsPackage(time,25010846, 102687371,
                 0, 0, 0, 0, 0, 32);
 
-        String hourTime = new SimpleDateFormat("yyyyMMddHH", Locale.CHINESE).format(date);
+        String hourTime = new SimpleDateFormat("yyMMddHH", Locale.CHINESE).format(date);
 
         // 实时数据
         byte dataType = 0x00;
-
         // 保留18字节
         byte[] reverse = new byte[18];
-        String terminalPhoneNumber = Utils.TERMINAL_PHONE_NUMBER;
         // 学员登录编号 = 教练登录编号 + 学员登录流水号 共8字节
         byte[] studentLoginNum = new byte[8];
-        byte[] stuFlowNumBytes = Tools.intTo2Bytes(PrefsUtil.getStudentLoginFlowNum());
+        int stuLoginFlow = PrefsUtil.getStudentLoginFlowNum();
+        byte[] stuFlow = Tools.intTo2Bytes(stuLoginFlow);
 
-       // JT808ExtFrame jt808ExtFrame = new StudentLoginFrame(Utils.KEY, dataType, Utils.VENDOR_ID, terminalPhoneNumber, studentLoginNum)
-        return null;
+        int index = 0;
+        for(byte b : Utils.teacherLoginNumByteArray) {
+            studentLoginNum[index++] = b;
+        }
+        for(byte b : stuFlow) {
+            studentLoginNum[index++] = b;
+        }
+
+        int picId = 1000;
+        byte grade = 3;
+
+       JT808ExtFrame jt808ExtFrame = new StudentLoginFrame(Utils.KEY, dataType, Utils.VENDOR_ID,
+               Utils.TERMINAL_PHONE_NUMBER, studentLoginNum, Utils.STUDENT_IC, Utils.STUDENT_NUM,
+               reverse, grade, Utils.TEACHER_NUM, Utils.SCHOOL_NUM, picId, gpsPackage);
+        return jt808ExtFrame.getMessage();
     }
 
     private Callback mCallback = null;
