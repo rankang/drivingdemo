@@ -4,18 +4,18 @@ import com.driving.application.util.Logger;
 import com.driving.application.util.Tools;
 
 public abstract class BaseFrame {
-    private static int flowNum = 1;
+    private static int internalIndex = 1;
     /**帧标识符*/
     protected static final int FLAG = 0x7E;
     /**
      *  获取flow num [1-65535]
      * @return flow num
      */
-    public static int getFlowNum() {
-        if(flowNum > 65535) {
-            flowNum = 1;
+    protected  int getFlowNum() {
+        if(internalIndex > 65535) {
+            internalIndex = 1;
         }
-        return flowNum++;
+        return internalIndex++;
     }
 
     protected byte[] transformer(byte[] frameData) {

@@ -41,7 +41,7 @@ public class ConnectManager {
     }
 
     Object emptyObject = new Object();
-    public void init() {
+    private void init() {
         try {
             if(clientSocket == null) {
                 synchronized (emptyObject) {
@@ -184,13 +184,15 @@ public class ConnectManager {
             // 计算checkSum
             byte calculatedCheckSum = Tools.checkSum(originalData, 1, originalData.length-3);
             byte checkSum = originalData[originalData.length-2];
-            Logger.i("calculatedCheckSum===="+Tools.byteToHexString(calculatedCheckSum));
+            Logger.i("checkSumCalculated===="+Tools.byteToHexString(calculatedCheckSum));
             Logger.i("checkSum===="+Tools.byteToHexString(checkSum));
             // 校验通过处理数据
             if(calculatedCheckSum == checkSum) {
                 dataProcess(originalData);
             }
+            // 读的位置移动整个帧长度
             pRd += dataLength;
+            // 数据拷贝
             if(pRd < pWr) {
                 byte[] buf = new byte[2048];
                 System.arraycopy(mRevBuffer, pRd, buf, 0, pWr - pRd);
@@ -213,9 +215,10 @@ public class ConnectManager {
      * @param transformBytes
      * @return
      */
-    private byte[] transformerBack(byte[] transformBytes) {
+    public static byte[] transformerBack(byte[] transformBytes) {
         int count = 0;
         byte[] temp = new byte[transformBytes.length-2];
+        // 计算count个个数用于初始化temp bytearray
         for(int i=1; i<transformBytes.length-1; i++) {
             if(transformBytes[i] == 0x7d && (transformBytes[i+1] == 0x01 || transformBytes[i+1] == 0x02)) {
                 count++;
@@ -225,17 +228,17 @@ public class ConnectManager {
         if(count <= 0) return transformBytes;
 
         byte[] originBytes = new byte[transformBytes.length - count];
-        originBytes[0] = transformBytes[0];
-        originBytes[0] = 0x7e;
+        int index = 0;
+        originBytes[index++] = 0x7e;
         for(int i=0; i<temp.length; i++) {
             if(temp[i] == 0x7d && (i+1) < temp.length &&  temp[i+1] == 0x01) {
-                originBytes[i] = 0x7d;
+                originBytes[index++] = 0x7d;
                 i++;
             } else if(temp[i] == 0x7d && (i+1) < temp.length  && temp[i+1] == 0x02) {
-                originBytes[i] = 0x7e;
+                originBytes[index++] = 0x7e;
                 i++;
             } else {
-                originBytes[i] = temp[i];
+                originBytes[index++] = temp[i];
             }
         }
         originBytes[originBytes.length-1] = 0x7e;
@@ -258,6 +261,9 @@ public class ConnectManager {
         switch (msgId) {
             // Standard JTT808 通用
             case MSGID.COMMON_RES:
+             // 多媒体发送完成后响应帧
+            case MSGID.PICTURE_UPLOAD_LAST_PACKAGE_RESPONSE:
+            // JTT808 注册
             case MSGID.REGISTER_RES:
                 // 根据数据长度取数据
                 msgData = new byte[msgBodyAttr];
@@ -267,37 +273,50 @@ public class ConnectManager {
                 break;
              // 下行透传
             case MSGID.TRANS_RES:
+                int jtt808HeaderSize = 12;
+                int transHeaderSize = 14;
                 // 30 = 2xflag + 0xf1 + checkSum（1） + jtt808HeaderSize（12） + transHeaderSize（14）
-                if(data.length <= 30) return;
-                msgData = new byte[msgBodyAttr-14];
+                // 帧最小长度
+                int minSize = 2 + 1 + 1 + jtt808HeaderSize + transHeaderSize;
+                if(data.length < minSize) return;
+                msgData = new byte[msgBodyAttr- jtt808HeaderSize];
                 // 透传消息的长度
                 // jtt808HeaderSize 14
                 // 消息长度 = len - 2*flag-checksum-jtt808headerSize
                 // len - 2-1-13-1
-                if(msgBodyAttr != len-2-1-14) return;
-                if(data[15] != (byte)0xF1) return;
-                int transMsgId = Tools.twoBytes2Int(new byte[]{data[16], data[17]});
-                int key = Tools.byte2Int(data[24], data[25], data[26], data[27]);
-                int transBodyLength = Tools.twoBytes2Int(new byte[]{data[28], data[29]});
-                int transBodyStartIndex = 30;
+                if(msgBodyAttr != len-2-1-12) return;
+                // 第15个字节为 0xf1
+                if(data[13] != (byte)0xF1) return;
+                // 透传消息ID
+                int transMsgId = Tools.twoBytes2Int(new byte[]{data[14], data[15]});
+                msgId = transMsgId;
+                // 密钥key
+                int key = Tools.byte2Int(data[22], data[23], data[24], data[25]);
+                // 透传消息body的长度
+                int transBodyLength = Tools.twoBytes2Int(new byte[]{data[26], data[27]});
+                // 1xflag + jtt808headerSize + 0xf1 + +tansHeaderSize
+                int transBodyStartIndex = 28;
                 int transBodyEndIndex = dataEndIndex;
                 int transBodyCalculatedSize = transBodyEndIndex - transBodyStartIndex + 1;
                 if(transBodyCalculatedSize != transBodyLength) return;
                 byte[] transBodyData = new byte[transBodyLength];
                 switch (transMsgId) {
                     case MSGID.TEACHER_LOGIN_RES_REAL:
-                    case MSGID.TEACHER_LOGIN_RES_HISTORY:
+                    case MSGID.STUDENT_LOGIN_RES_REAL:
+                    case MSGID.HISTORY_DATA_RESPONSE:
+                    case MSGID.STUDENT_LOGOUT_RESPONSE:
+                    case MSGID.TEACHER_LOGOUT_RESPONSE:
                         if (transBodyEndIndex + 1 - transBodyStartIndex >= 0)
                             System.arraycopy(data, transBodyStartIndex, transBodyData, 0, transBodyEndIndex + 1 - transBodyStartIndex);
+                        Logger.i("------密钥KEY---------"+key);
+                        Logger.i("------接收到加密透传消息体---------"+Tools.bytesToHexString(transBodyData));
                         // 解密
                         msgData = Tools.encrypt(key, transBodyData, transBodyLength);
+                        Logger.i("------接收到解密透传消息体---------"+Tools.bytesToHexString(msgData));
                         break;
-                    case MSGID.STUDENT_LOGIN_REQ:
-
                 }
                 break;
         }
         EventBus.getDefault().post(new EvtBusEntity(msgId, msgData));
     }
-
 }

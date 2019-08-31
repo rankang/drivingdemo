@@ -25,7 +25,7 @@ public class StudentLoginFrame extends JT808ExtFrame {
     public StudentLoginFrame(int key, byte dataType, int vendorId, String terminalPhoneNumber,
                              byte[] studentLoginNum, String studentIcCard, int studentNum, byte[] reverse,
                              byte grade, int cTeachNum, int schoolNum, int picId, GpsPackage gpsPackage) {
-        super(MSGID.STUDENT_LOGIN, key, vendorId, terminalPhoneNumber);
+        super(MSGID.STUDENT_LOGIN_REQ, key, vendorId, terminalPhoneNumber);
         this.dataType =dataType;
         this.studentLoginNum = studentLoginNum;
         this.studentIcCard = studentIcCard;

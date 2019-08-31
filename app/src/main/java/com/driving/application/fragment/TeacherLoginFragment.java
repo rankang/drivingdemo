@@ -14,6 +14,7 @@ import android.widget.TextView;
 import com.driving.application.Callback;
 import com.driving.application.R;
 import com.driving.application.connect.ConnectManager;
+import com.driving.application.event.EvtBusEntity;
 import com.driving.application.jt808.BaseFrame;
 import com.driving.application.jt808.GpsPackage;
 import com.driving.application.jt808.JT808ExtFrame;
@@ -22,6 +23,10 @@ import com.driving.application.jt808.frame.TeacherLoginFrame;
 import com.driving.application.util.Logger;
 import com.driving.application.util.Tools;
 import com.driving.application.util.Utils;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
@@ -81,6 +86,13 @@ public class TeacherLoginFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_teacher_login, container, false);
     }
 
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        EventBus.getDefault().register(this);
+    }
+
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -135,6 +147,43 @@ public class TeacherLoginFragment extends Fragment {
         JT808ExtFrame tlf = new TeacherLoginFrame(Utils.KEY, Utils.VENDOR_ID, terminalPhoneNumber,
                 dataType, hourTime, Utils.TEACHER_IC, Utils.TEACHER_NUM, reverse, Utils.SCHOOL_NUM, gpsPackage);
         return tlf.getMessage();
+    }
+
+    /**
+     * 这里只处理实时数据，补传数据应该在单独的地方处理
+     * @param entity
+     */
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onResponse(EvtBusEntity entity) {
+        if(entity.msgId == MSGID.TEACHER_LOGIN_RES_REAL) {
+            byte[] data = entity.data;
+            // 判断是否成功
+            if(data != null && data.length > 0) {
+                // 成功
+                if(data[0] == 0x01) {
+                    mNextStep.setEnabled(true);
+                    // 正常情况数据长度为12
+                    // bcd to string
+                    StringBuffer sb = new StringBuffer("登录成功, 教练登录编号为  ->  ");
+                    // 1-6共6个字节
+                    byte[] loginNum = new byte[6];
+                    System.arraycopy(data, 1, loginNum, 0, loginNum.length);
+                    String teacherLoginFlowNum = Tools.bytesToHexString(loginNum).replace(" ", "");
+                    sb.append(teacherLoginFlowNum);
+                    mLogMessage.setText(sb.toString());
+                } else {
+
+                }
+            } else {
+                throw new RuntimeException("教练登录返回数据不正确");
+            }
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        EventBus.getDefault().unregister(this);
     }
 
     private Callback mCallback = null;

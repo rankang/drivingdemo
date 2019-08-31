@@ -22,7 +22,9 @@ public class Utils {
     public static final int STUDENT_NUM = 6486415;
     // 学员ic
     public static final String STUDENT_IC = "530127198404181713";
-
-
     public static byte[] teacherLoginNumByteArray;
+    public static byte[] studentLoginNumByteArray;
+
+
+
 }

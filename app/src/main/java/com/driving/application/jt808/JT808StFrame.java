@@ -1,6 +1,9 @@
 package com.driving.application.jt808;
 
+import com.driving.application.util.Logger;
 import com.driving.application.util.Tools;
+
+import java.math.BigInteger;
 
 /**
  * JT/T808 标准协议封装
@@ -8,12 +11,23 @@ import com.driving.application.util.Tools;
 public abstract class JT808StFrame extends BaseFrame {
     private int msgId;
     private String phoneNumber;
-
-
+    private boolean isMultiPackage;
+    /**消息包总数*/
+    private int totalPackageCount;
+    /**从1开始*/
+    private int packageSequence;
     public JT808StFrame(int msgId, String phoneNumber) {
         this.msgId = msgId;
         this.phoneNumber = phoneNumber;
     }
+
+    public JT808StFrame(int msgId, String phoneNumber, boolean isMultiPackage, int totalPackageCount, int packageSequence) {
+        this(msgId, phoneNumber);
+        this.isMultiPackage = isMultiPackage;
+        this.totalPackageCount = totalPackageCount;
+        this.packageSequence = packageSequence;
+    }
+
 
     /**
      *0	消息ID	WORD
@@ -27,7 +41,12 @@ public abstract class JT808StFrame extends BaseFrame {
 
     @Override
     protected byte[] createMsgHeader(int bodySize) {
-        byte[] header = new byte[12];
+        byte[] header;
+        if(isMultiPackage) {
+            header = new byte[16];
+        } else {
+            header =  new byte[12];
+        }
         int index = 0;
         // 消息id 2 byte
         byte[] msgIdBytes = Tools.intTo2Bytes(msgId);
@@ -35,7 +54,7 @@ public abstract class JT808StFrame extends BaseFrame {
         header[index++] = msgIdBytes[1];
 
         // 消息体属性 2 byte
-        byte[] bodySizeBytes = Tools.intTo2Bytes(bodySize);
+        byte[] bodySizeBytes =createMsgBodyAttr(bodySize, isMultiPackage);
         header[index++] = bodySizeBytes[0];
         header[index++] = bodySizeBytes[1];
 
@@ -49,6 +68,16 @@ public abstract class JT808StFrame extends BaseFrame {
         header[index++] = flowNumBytes[0];
         header[index++] = flowNumBytes[1];
         // 消息封装项 根据消息体属性而定
+        if(isMultiPackage) {
+            byte[] totalPackageByteArray = Tools.intTo2Bytes(totalPackageCount);
+            byte[] packageSequenceByteArray = Tools.intTo2Bytes(packageSequence);
+            for(byte b : totalPackageByteArray) {
+                header[index++] = b;
+            }
+            for(byte b : packageSequenceByteArray) {
+                header[index++] = b;
+            }
+        }
         return header;
     }
 
@@ -76,5 +105,28 @@ public abstract class JT808StFrame extends BaseFrame {
         msgData[index++] = checkSum;
         msgData[index] = FLAG;
         return transformer(msgData);
+    }
+
+    private byte[] createMsgBodyAttr(int bodySize, boolean byPackage) {
+        if(!byPackage) return Tools.intTo2Bytes(bodySize);
+        // 一共16位
+        byte[] bitArray = new byte[16];
+        String bitString = Integer.toBinaryString(bodySize);//integer2BitS(bodySize);
+        Logger.i("bit String=="+bitString);
+        // 将第二位设置为1,表示数据分包
+        bitArray[2] = 0x01;
+        int size = bitString.length();
+        int start = 16-size;
+        for(int i=start; i < 16; i++) {
+            String numStr = String.valueOf(bitString.charAt(i-start));
+            bitArray[i] = Byte.parseByte(numStr);
+        }
+        Logger.i(Tools.bytesToHexString(bitArray));
+        String binStr = "";
+        for(int i = 0; i < bitArray.length; i++) {
+            binStr += String.valueOf(bitArray[i]);
+        }
+        int intValue = Integer.parseInt(binStr, 2);
+        return Tools.intTo2Bytes(intValue);
     }
 }

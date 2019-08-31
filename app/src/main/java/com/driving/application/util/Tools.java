@@ -2,6 +2,7 @@ package com.driving.application.util;
 
 import android.util.Log;
 
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
@@ -132,6 +133,22 @@ public class Tools {
     public static int byte2Int(byte b2, byte b3, byte b0, byte b1) {
         byte[] b = {b2, b3, b0, b1};
         return byte2Int(b);
+    }
+
+
+
+
+    private static String integer2BitS(int num) {
+        int a; //获取余数
+        int ch=0; //存储二进制
+        int i=0; //存储除了几次
+        while(num!=0){
+            a=num%2;
+            num=num/2;
+            ch+=a*(Math.pow(10, i));
+            i++;
+        }
+        return String.valueOf(ch);
     }
 
     /**

@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
 import com.driving.application.connect.ConnectManager;
+import com.driving.application.fragment.LogoutFragment;
 import com.driving.application.fragment.RegisterFragment;
 import com.driving.application.fragment.StudentLoginFragment;
 import com.driving.application.fragment.TeacherLoginFragment;
@@ -69,6 +70,9 @@ public class MainActivity extends AppCompatActivity implements Callback, Registe
             UploadPicFragment upf = UploadPicFragment.newInstance("", "");
             upf.setCallback(this);
             switchFragment(upf);
+        } else if("LogoutFragment".equals(jumpTo)) {
+            LogoutFragment logoutFragment = LogoutFragment.newInstance("", "");
+            switchFragment(logoutFragment);
         }
     }
 
@@ -91,6 +95,6 @@ public class MainActivity extends AppCompatActivity implements Callback, Registe
         FragmentTransaction t = getSupportFragmentManager().beginTransaction();
         t.replace(R.id.fragment_container, fragment);
         t.commit();
-        t.addToBackStack("StudentLoginFragment");
+        //t.addToBackStack("StudentLoginFragment");
     }
 }

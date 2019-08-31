@@ -8,15 +8,24 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.driving.application.Callback;
 import com.driving.application.R;
+import com.driving.application.connect.ConnectManager;
+import com.driving.application.event.EvtBusEntity;
 import com.driving.application.jt808.GpsPackage;
 import com.driving.application.jt808.JT808ExtFrame;
+import com.driving.application.jt808.MSGID;
 import com.driving.application.jt808.frame.StudentLoginFrame;
+import com.driving.application.util.Logger;
 import com.driving.application.util.PrefsUtil;
 import com.driving.application.util.Tools;
 import com.driving.application.util.Utils;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -31,6 +40,8 @@ public class StudentLoginFragment extends Fragment {
     private String mParam1;
     private String mParam2;
 
+    private Button mNextStep;
+    private TextView mLogMessage;
 
     public StudentLoginFragment() {
         // Required empty public constructor
@@ -68,21 +79,29 @@ public class StudentLoginFragment extends Fragment {
         stuLogin.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-
+                byte[] data = createStuFrameData();
+                ConnectManager.getInstance().sendData(data);
             }
         });
-
-        Button nextStep = view.findViewById(R.id.next_step);
-        nextStep.setOnClickListener(new View.OnClickListener(){
+        // 下一步
+        mNextStep = view.findViewById(R.id.next_step);
+        mNextStep.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
                 if(mCallback != null) {
-                    mCallback.onNext("PicUploadFragment");
+                    mCallback.onNext(UploadPicFragment.class.getSimpleName());
                 }
             }
         });
+        // 日志信息
+        mLogMessage = view.findViewById(R.id.log_message);
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        EventBus.getDefault().register(this);
+    }
 
     private byte[] createStuFrameData() {
         // 25010846是纬度  102687371是经度
@@ -99,24 +118,80 @@ public class StudentLoginFragment extends Fragment {
         byte[] reverse = new byte[18];
         // 学员登录编号 = 教练登录编号 + 学员登录流水号 共8字节
         byte[] studentLoginNum = new byte[8];
-        int stuLoginFlow = PrefsUtil.getStudentLoginFlowNum();
-        byte[] stuFlow = Tools.intTo2Bytes(stuLoginFlow);
+        int stuLoginFlowNum = PrefsUtil.getStudentLoginFlowNum();
+        byte[] stuFlowNumByteArray = Tools.intTo2Bytes(stuLoginFlowNum);
 
         int index = 0;
         for(byte b : Utils.teacherLoginNumByteArray) {
             studentLoginNum[index++] = b;
         }
-        for(byte b : stuFlow) {
+        for(byte b : stuFlowNumByteArray) {
             studentLoginNum[index++] = b;
         }
-
+        Utils.studentLoginNumByteArray = studentLoginNum;
         int picId = 1000;
         byte grade = 3;
-
        JT808ExtFrame jt808ExtFrame = new StudentLoginFrame(Utils.KEY, dataType, Utils.VENDOR_ID,
                Utils.TERMINAL_PHONE_NUMBER, studentLoginNum, Utils.STUDENT_IC, Utils.STUDENT_NUM,
                reverse, grade, Utils.TEACHER_NUM, Utils.SCHOOL_NUM, picId, gpsPackage);
         return jt808ExtFrame.getMessage();
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onResponse(EvtBusEntity entity) {
+        if(entity.msgId == MSGID.STUDENT_LOGIN_RES_REAL) {
+            // 正常情况数据长度为19
+            byte[] data = entity.data;
+            if(data != null && data.length > 0) {
+                Logger.i("学员登录返回数据=="+Tools.bytesToHexString(data));
+                // 成功
+                if(data[0] == 0x01) {
+                    StringBuffer sb = new StringBuffer("学员登录成功\n");
+                    // 1-8 学员登录编号
+                    int startPosition = 1;
+                    byte[] studentLoginByteArray = new byte[8];
+                    // 学员登录编号
+                    System.arraycopy(data, startPosition, studentLoginByteArray, 0, studentLoginByteArray.length);
+                    String studentLoginNum = Tools.bytesToHexString(studentLoginByteArray).replace(" ", "");
+                    startPosition += studentLoginByteArray.length;
+                    // 学员编号
+                    byte[] studentNumByteArray = new byte[4];
+                    System.arraycopy(data, startPosition, studentNumByteArray, 0, studentNumByteArray.length);
+                    int studentNum = Tools.byte2Int(studentNumByteArray);
+                    startPosition += studentNumByteArray.length;
+                    // 科目
+                    int grade = data[startPosition];
+                    startPosition += 1;
+
+                    byte[] totalStudyHourByteArray = new byte[2];
+                    System.arraycopy(data, startPosition, totalStudyHourByteArray, 0, totalStudyHourByteArray.length);
+                    int totalStudyHour = Tools.twoBytes2Int(totalStudyHourByteArray);
+                    startPosition += totalStudyHourByteArray.length;
+
+                    byte[] finishStudyHourByteArray = new byte[2];
+                    System.arraycopy(data, startPosition, finishStudyHourByteArray, 0, finishStudyHourByteArray.length);
+                    int finishStudyHour = Tools.twoBytes2Int(finishStudyHourByteArray);
+                    // 组装显示数据
+                    sb.append("学员登录编号：").append(studentLoginNum).append("\n")
+                            .append("学员编号：").append(studentNum).append("\n")
+                            .append("科目：").append(grade).append("\n")
+                            .append("总学时：").append(totalStudyHour).append("\n")
+                            .append("已完成学时：").append(finishStudyHour);
+                    mNextStep.setEnabled(true);
+                    mLogMessage.setText(sb.toString());
+                } else {
+                    Logger.i("student login failed");
+                }
+            } else {
+                throw new RuntimeException("学员登录返回数据错误");
+            }
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        EventBus.getDefault().unregister(this);
     }
 
     private Callback mCallback = null;
