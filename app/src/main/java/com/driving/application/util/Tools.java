@@ -173,7 +173,7 @@ public class Tools {
         }
         while (idx < size) {
             key = IA1 * (key % mkey) +IC1;
-            encrypt[idx] = (byte) (buffer[idx] ^  ((key >> 20) & 0xff));
+            encrypt[idx] = (byte)((buffer[idx] ^  ((key >> 20) & 0xff) & 0xff));
             idx++;
         }
         return encrypt;

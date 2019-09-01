@@ -33,19 +33,31 @@ public class ExampleInstrumentedTest {
     @Test
     public void testEncrypt() {
         byte[] buffer2 = new byte[]{0x19, 0x08, 0x31, 0x12, 0x00, 0x00, 0x01};
-        int key2 = 1;
+       // Logger.i(Tools.bytesToHexString(buffer2));
+        int key = 100000;
+        final int IA1 = 9100000;
+        final int IC1 = 9200000;
+        final int mkey = 600059737;
        // int key2 = Tools.byte2Int(new byte[]{0x00, 0x00, 0x55, (byte)0x86});
         // 2e 6c=11884
         // 加密
-        byte[] encrypt = Tools.encrypt(key2, buffer2, buffer2.length);
-        Logger.i(Tools.bytesToHexString(encrypt));
-        String d = new String(new byte[]{(byte)0xee, 0x66, 0x76, (byte)0xef, (byte)0xe8, 0x45});
-        Logger.i(d);
-        // 解密
-        byte[] encrypt2 = Tools.encrypt(key2, encrypt, encrypt.length);
-        Logger.i(Tools.bytesToHexString(encrypt2));
-        byte[] encrypt3 = Tools.encrypt(key2, encrypt2, encrypt2.length);
-        Logger.i(Tools.bytesToHexString(encrypt3));
+        int size = buffer2.length;
+        int idx = 0;
+        while (idx < size) {
+            key = (IA1 * (key % mkey) + IC1) & 0xFFFFFF;
+            Logger.i(key + " ");
+            idx++;
+            //buffer2[idx++] ^=  (short) ((key >> 20) & 0xff);
+        }
+       // Logger.i(buffer2[1]+"");
+        //Logger.i(Tools.bytesToHexString(encrypt));
+    }
+
+    @Test
+    public void testOverFlow() {
+        int a = 130;
+
+        //Logger.i("+++++++++++++  "+b);
     }
 
     @Test

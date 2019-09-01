@@ -1,0 +1,46 @@
+#include <stdio.h>
+
+int main () {
+	 /* 我的第一个 C 程序 */
+   printf("Hello, World! \n");
+   unsigned int mkey = 600059737;
+   unsigned int IA1 = 9100000;
+   unsigned int IC1 = 9200000;
+   unsigned int key = 100000;
+	
+   int idx = 0;
+	
+   unsigned char data[] = {0x19, 0x08, 0x31, 0x12, 0x00, 0x00, 0x01};
+   int size = 7;	
+   while (idx <size)
+   {
+	 key = IA1 * (key % mkey) +IC1;
+	 data[idx++] ^= (unsigned char)((key >> 20) & 0xff);
+   }
+   printf("%x ", data[0]);
+   printf("%x ", data[1]);
+   printf("%x ", data[2]);
+   printf("%x ", data[3]);
+   printf("%x ", data[4]);
+   printf("%x ", data[5]);
+   printf("%x ", data[6]);
+   printf("\n");
+   printf("------------------------\n");
+	
+   idx = 0;
+   key = 100000;
+   while (idx <size)
+   {
+	 key = IA1 * (key % mkey) +IC1;
+	 data[idx++] ^= (unsigned char)((key >> 20) & 0xff);
+   }
+	
+   printf("%x ", data[0]);
+   printf("%x ", data[1]);
+   printf("%x ", data[2]);
+   printf("%x ", data[3]);
+   printf("%x ", data[4]);
+   printf("%x ", data[5]);
+   printf("%x ", data[6]);
+   return 0;
+}
