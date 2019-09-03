@@ -5,6 +5,8 @@ import com.driving.application.jt808.BaseFrame;
 import com.driving.application.jt808.MSGID;
 import com.driving.application.util.Logger;
 import com.driving.application.util.Tools;
+import com.driving.application.util.Utils;
+import com.example.myapplication.EncryptUtil;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -311,7 +313,8 @@ public class ConnectManager {
                         Logger.i("------密钥KEY---------"+key);
                         Logger.i("------接收到加密透传消息体---------"+Tools.bytesToHexString(transBodyData));
                         // 解密
-                        msgData = Tools.encrypt(key, transBodyData, transBodyLength);
+                        int m1 = Integer.parseInt(Utils.validateCode);
+                        msgData  = EncryptUtil.encrypt(m1, key, transBodyData);
                         Logger.i("------接收到解密透传消息体---------"+Tools.bytesToHexString(msgData));
                         break;
                 }

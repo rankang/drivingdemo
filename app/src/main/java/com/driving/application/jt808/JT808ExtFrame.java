@@ -3,10 +3,7 @@ package com.driving.application.jt808;
 import com.driving.application.util.Tools;
 import com.driving.application.util.Logger;
 import com.driving.application.util.Utils;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
+import com.example.myapplication.EncryptUtil;
 
 /**
  * 基于JT/T808 扩展协议帧封装类
@@ -131,7 +128,10 @@ public abstract class JT808ExtFrame extends BaseFrame{
         }
 
         // 透传消息体
-        byte[] encryptBody = Tools.encrypt(key, transBody, transBody.length);
+        //byte[] encryptBody = Tools.encrypt(key, transBody, transBody.length);
+        int m1 = Integer.parseInt(Utils.validateCode);
+        int key = 100000;
+        byte[] encryptBody = EncryptUtil.encrypt(m1, key, transBody);
         Logger.i("----encryptBody-------"+Tools.bytesToHexString(encryptBody));
         for (byte b : encryptBody) {
             frameData[index++] = b;
