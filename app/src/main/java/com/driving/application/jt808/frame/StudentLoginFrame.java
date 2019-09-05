@@ -3,6 +3,7 @@ package com.driving.application.jt808.frame;
 import com.driving.application.jt808.GpsPackage;
 import com.driving.application.jt808.JT808ExtFrame;
 import com.driving.application.jt808.MSGID;
+import com.driving.application.util.Logger;
 import com.driving.application.util.Tools;
 
 import java.nio.charset.Charset;
@@ -51,7 +52,12 @@ public class StudentLoginFrame extends JT808ExtFrame {
             transBody[index++] = b;
         }
         // 学员IC卡号 18byte
-        byte[] studentIcCardArray = studentIcCard.getBytes(Charset.forName("gbk"));
+        byte[] studentIcCardArray = new byte[18];
+        byte[] temp = studentIcCard.getBytes(Charset.forName("gbk"));
+       System.arraycopy(temp, 0, studentIcCardArray, 0, temp.length);
+
+       String stuIc = new String(studentIcCardArray, Charset.forName("gbk"));
+        Logger.i("++++++++++++++++++++++++++++++++++++++++++++++++++="+stuIc);
         for(byte b : studentIcCardArray) {
             transBody[index++] = b;
         }

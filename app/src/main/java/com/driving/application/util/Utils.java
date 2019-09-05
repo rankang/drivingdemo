@@ -21,10 +21,8 @@ public class Utils {
     // 学员编号
     public static final int STUDENT_NUM = 6486415;
     // 学员ic
-    public static final String STUDENT_IC = "530127198404181713";
+    public static final String STUDENT_IC = "DF1234567890"; //"530127198404181713";
     public static byte[] teacherLoginNumByteArray;
     public static byte[] studentLoginNumByteArray;
-
-
     public static String startRecordTime;
 }

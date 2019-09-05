@@ -5,6 +5,8 @@ import com.driving.application.jt808.JT808ExtFrame;
 import com.driving.application.jt808.MSGID;
 import com.driving.application.util.Tools;
 
+import java.nio.charset.Charset;
+
 /**
  * 学员登出帧封装
  */
@@ -60,7 +62,9 @@ public class StudentLogoutFrame extends JT808ExtFrame {
             transBody[index++] = b;
         }
         // 学员IC卡号	STRING(18)
-        byte[] stuIcByteArray = stuIc.getBytes();
+        byte[] stuIcByteArray = new byte[18];
+        byte[] temp = stuIc.getBytes(Charset.forName("gbk"));
+        System.arraycopy(temp, 0, stuIcByteArray, 0, temp.length);
         for(byte b : stuIcByteArray) {
             transBody[index++] = b;
         }

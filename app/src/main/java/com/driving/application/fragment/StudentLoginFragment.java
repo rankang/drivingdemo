@@ -129,7 +129,7 @@ public class StudentLoginFragment extends Fragment {
         }
         Utils.studentLoginNumByteArray = studentLoginNum;
         int picId = 1000;
-        byte grade = 3;
+        byte grade = 0x22;
        JT808ExtFrame jt808ExtFrame = new StudentLoginFrame(Utils.KEY, dataType, Utils.VENDOR_ID,
                Utils.TERMINAL_PHONE_NUMBER, studentLoginNum, Utils.STUDENT_IC, Utils.STUDENT_NUM,
                reverse, grade, Utils.TEACHER_NUM, Utils.SCHOOL_NUM, picId, gpsPackage);

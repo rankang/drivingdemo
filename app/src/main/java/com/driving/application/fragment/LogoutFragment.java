@@ -121,7 +121,7 @@ public class LogoutFragment extends Fragment {
                 0, 0, 0, 0, 0, 32);
         byte dataType = 0x00;
         byte[] reverse = new byte[18];
-        byte grade = 0x03;
+        byte grade = 0x22;
         String startTime = new SimpleDateFormat("yyMMddHHmmss", Locale.CHINESE).format(startDate);
         String endTime = time;
         // 0x00：正常退出
