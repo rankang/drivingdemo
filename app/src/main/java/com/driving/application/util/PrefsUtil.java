@@ -38,6 +38,15 @@ public class PrefsUtil {
         return flow;
     }
 
+    public  static int getStudyFlowNum() {
+        int flow = mInstance.sp.getInt("study_data_flow", 1);
+        if(flow > 65535) {
+            flow = 1;
+        }
+        mInstance.editor.putInt("study_data_flow", flow+1).apply();
+        return flow;
+    }
+
 
 
 }

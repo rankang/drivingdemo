@@ -48,4 +48,6 @@ public interface MSGID {
     int STUDENT_LOGOUT_REQUEST = 0x0202;
     int STUDENT_LOGOUT_RESPONSE = 0x8202;
 
+    // 学时数据上传
+    int UPLOAD_STUDY_DATA = 0x0301;
 }

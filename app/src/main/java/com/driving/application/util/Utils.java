@@ -26,5 +26,5 @@ public class Utils {
     public static byte[] studentLoginNumByteArray;
 
 
-
+    public static String startRecordTime;
 }

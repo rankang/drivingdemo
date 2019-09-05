@@ -22,14 +22,20 @@
         android:layout_marginLeft="20dp"
         android:text="教练登出"
         android:enabled="false"/>
-    <android.support.v4.widget.NestedScrollView
+    <TextView
+        android:id="@+id/log_message"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-        <TextView
-            android:id="@+id/log_message"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="20dp"
-            android:layout_marginRight="20dp"/>
-    </android.support.v4.widget.NestedScrollView>
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"/>
+
+    <Button
+        android:id="@+id/next_step"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right|bottom"
+        android:text="下一步"
+        android:layout_margin="40dp"/>
+
+
 </LinearLayout>

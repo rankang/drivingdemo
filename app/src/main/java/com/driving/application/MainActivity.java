@@ -10,6 +10,7 @@ import com.driving.application.connect.ConnectManager;
 import com.driving.application.fragment.LogoutFragment;
 import com.driving.application.fragment.RegisterFragment;
 import com.driving.application.fragment.StudentLoginFragment;
+import com.driving.application.fragment.StudyDataFragment;
 import com.driving.application.fragment.TeacherLoginFragment;
 import com.driving.application.fragment.UploadPicFragment;
 import com.driving.application.jt808.JT808StFrame;
@@ -86,7 +87,12 @@ public class MainActivity extends AppCompatActivity implements Callback, Registe
             switchFragment(upf);
         } else if("LogoutFragment".equals(jumpTo)) {
             LogoutFragment logoutFragment = LogoutFragment.newInstance("", "");
+            logoutFragment.setCallback(this);
             switchFragment(logoutFragment);
+        } else if("StudyDataFragment".equals(jumpTo)) {
+            StudyDataFragment studyDataFragment = StudyDataFragment.newInstance("", "");
+            studyDataFragment.setCallback(this);
+            switchFragment(studyDataFragment);
         }
     }
 

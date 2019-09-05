@@ -28,6 +28,7 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
@@ -109,9 +110,7 @@ public class StudentLoginFragment extends Fragment {
         String time = new SimpleDateFormat("yyMMddHHmmss", Locale.CHINESE).format(date);
         GpsPackage gpsPackage = new GpsPackage(time,25010846, 102687371,
                 0, 0, 0, 0, 0, 32);
-
-        String hourTime = new SimpleDateFormat("yyMMddHH", Locale.CHINESE).format(date);
-
+        Utils.startRecordTime = time;
         // 实时数据
         byte dataType = 0x00;
         // 保留18字节

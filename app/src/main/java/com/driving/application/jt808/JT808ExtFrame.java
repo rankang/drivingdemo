@@ -130,7 +130,7 @@ public abstract class JT808ExtFrame extends BaseFrame{
         // 透传消息体
         //byte[] encryptBody = Tools.encrypt(key, transBody, transBody.length);
         int m1 = Integer.parseInt(Utils.validateCode);
-        byte[] encryptBody = EncryptUtil.encrypt(m1, Utils.KEY, transBody);
+        byte[] encryptBody = EncryptUtil.encrypt(m1, key, transBody);
         Logger.i("----encryptBody-------"+Tools.bytesToHexString(encryptBody));
         for (byte b : encryptBody) {
             frameData[index++] = b;

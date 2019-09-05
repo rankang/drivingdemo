@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.driving.application.Callback;
 import com.driving.application.R;
 import com.driving.application.connect.ConnectManager;
 import com.driving.application.event.EvtBusEntity;
@@ -26,6 +27,7 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
@@ -42,6 +44,7 @@ public class LogoutFragment extends Fragment {
     private Button mStuLoginOut;
     private Button mTeacherLoginOut;
     private TextView mLogMessage;
+    private Button mNextStep;
     public LogoutFragment() {
         // Required empty public constructor
     }
@@ -92,10 +95,25 @@ public class LogoutFragment extends Fragment {
                 ConnectManager.getInstance().sendData(data);
             }
         });
+
+        mNextStep = view.findViewById(R.id.next_step);
+        mNextStep.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(null != mCallback) {
+                    mCallback.onNext(StudyDataFragment.class.getSimpleName());
+                }
+            }
+        });
     }
 
     private byte[] createStuLogoutFrame() {
         Date date = new Date();
+        Calendar c = Calendar.getInstance();
+        c.setTime(date);
+        c.add(Calendar.HOUR_OF_DAY, -1);
+        Date startDate = c.getTime();
+
         String time = new SimpleDateFormat("yyMMddHHmmss", Locale.CHINESE).format(date);
         //24879660.0000,102833220.0000
         // 25010846是纬度  102687371是经度
@@ -104,7 +122,7 @@ public class LogoutFragment extends Fragment {
         byte dataType = 0x00;
         byte[] reverse = new byte[18];
         byte grade = 0x03;
-        String startTime = time;
+        String startTime = new SimpleDateFormat("yyMMddHHmmss", Locale.CHINESE).format(startDate);
         String endTime = time;
         // 0x00：正常退出
         //0x01：未验证指纹退出
@@ -181,5 +199,11 @@ public class LogoutFragment extends Fragment {
     public void onPause() {
         super.onPause();
         EventBus.getDefault().unregister(this);
+    }
+
+
+    private Callback mCallback = null;
+    public void setCallback(Callback callback) {
+        this.mCallback = callback;
     }
 }

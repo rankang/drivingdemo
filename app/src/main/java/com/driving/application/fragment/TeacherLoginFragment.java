@@ -30,6 +30,7 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
@@ -127,6 +128,7 @@ public class TeacherLoginFragment extends Fragment {
 
 
     private byte[] createTeacherLoginRequest() {
+
         Date date = new Date();
         String time = new SimpleDateFormat("yyMMddHHmmss", Locale.CHINESE).format(date);
         //24879660.0000,102833220.0000
