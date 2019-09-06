@@ -19,9 +19,10 @@ public class Utils {
     public static final String CAR_BOARD_NUMBER = "云A5300学";
 
     // 学员编号
-    public static final int STUDENT_NUM = 6486415;
+    // 530127199308060027   李映梅
+    public static final int STUDENT_NUM = 6464749;
     // 学员ic
-    public static final String STUDENT_IC = "DF1234567890"; //"530127198404181713";
+    public static final String STUDENT_IC = "DF000000000"; //"530127198404181713";
     public static byte[] teacherLoginNumByteArray;
     public static byte[] studentLoginNumByteArray;
     public static String startRecordTime;
